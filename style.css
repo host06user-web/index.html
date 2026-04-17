@@ -29,15 +29,17 @@ canvas { position: fixed; top: 0; left: 0; z-index: -1; }
 }
 
 #messages {
-    height: 350px;
+    height: 300px;
     overflow-y: auto;
-    border-bottom: 1px solid var(--hacker-green);
-    margin: 15px 0;
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    margin-bottom: 10px;
     text-align: left;
     padding: 10px;
     display: flex;
-    flex-direction: column;
-}
+    flex-direction: column; /* Faz as mensagens ficarem uma embaixo da outra */
+    background: rgba(0, 0, 0, 0.5); /* Fundo levemente transparente */
+    color: #00ff41 !important; /* Força a cor verde nas mensagens */
+    }
 
 .msg-bubble { margin-bottom: 8px; font-size: 0.9em; word-wrap: break-word; border-left: 2px solid var(--hacker-green); padding-left: 5px; }
 .msg-user { color: #fff; font-weight: bold; }
