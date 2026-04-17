@@ -1,10 +1,55 @@
 const SUPABASE_URL = 'https://supabase.co';
 const SUPABASE_KEY = 'sb_publishable_v5CWKatJk5k_j4QNE0Kb8w_BpkXOFdA';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let supabase;
 let currentUser = "";
 
-// Matrix Effect
+function startChat() {
+    const user = document.getElementById('username').value;
+    if(user.trim() !== "") {
+        currentUser = user;
+        // MUDA A TELA NA HORA
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('chat-container').classList.remove('hidden');
+        document.getElementById('user-display').innerText = `ID: ${user}`;
+        
+        carregarHistorico();
+        conectarRealtime();
+        initMatrix();
+    }
+}
+
+async function carregarHistorico() {
+    const { data } = await supabase.from('mensagens').select('*').order('created_at', { ascending: true });
+    if (data) data.forEach(m => exibirMensagem(m));
+}
+
+function conectarRealtime() {
+    supabase.channel('sala1').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, p => {
+        exibirMensagem(p.new);
+    }).subscribe();
+}
+
+function exibirMensagem(m) {
+    const box = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = 'msg-line';
+    const nick = m.usuario || "Anon";
+    const texto = m.conteudo || "";
+    // Estilo que você pediu: [Nick] Mensagem
+    div.innerHTML = `<span style="color:#00ff41; font-weight:bold;">[${nick}]</span> <span style="color:white">${texto}</span>`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
+async function enviar() {
+    const input = document.getElementById('message-input');
+    if(input.value.trim() !== "") {
+        await supabase.from('mensagens').insert([{ usuario: currentUser, conteudo: input.value }]);
+        input.value = '';
+    }
+}
+
 function initMatrix() {
     const c = document.getElementById('matrix');
     const ctx = c.getContext('2d');
@@ -19,59 +64,4 @@ function initMatrix() {
             drops[i]++;
         });
     }, 33);
-}
-
-// Inicia ao carregar
-window.onload = () => {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    initMatrix();
-    
-    // Configura o botão de login
-    document.getElementById('btn-login').onclick = () => {
-        const userVal = document.getElementById('username').value;
-        if(userVal.trim() !== "") {
-            currentUser = userVal;
-            document.getElementById('login-container').classList.add('hidden');
-            document.getElementById('chat-container').classList.remove('hidden');
-            document.getElementById('user-display').innerText = `ID: ${currentUser}`;
-            carregarMensagens();
-            ligarRealtime();
-        }
-    };
-
-    // Configura o botão de enviar
-    document.getElementById('btn-send').onclick = enviar;
-};
-
-async function carregarMensagens() {
-    const { data } = await supabase.from('mensagens').select('*').order('created_at', { ascending: true });
-    if (data) {
-        document.getElementById('messages').innerHTML = '';
-        data.forEach(m => exibirNaTela(m));
-    }
-}
-
-function ligarRealtime() {
-    supabase.channel('sala_chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, p => {
-        exibirNaTela(p.new);
-    }).subscribe();
-}
-
-function exibirNaTela(m) {
-    const box = document.getElementById('messages');
-    const div = document.createElement('div');
-    div.className = 'msg-line';
-    const nick = m.usuario || "Anon";
-    const texto = m.conteudo || "";
-    div.innerHTML = `<span style="color:#00ff41; font-weight:bold;">[${nick}]</span> <span style="color:white">${texto}</span>`;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-}
-
-async function enviar() {
-    const input = document.getElementById('message-input');
-    if(input.value.trim() !== "") {
-        await supabase.from('mensagens').insert([{ usuario: currentUser, conteudo: input.value }]);
-        input.value = '';
-    }
 }
