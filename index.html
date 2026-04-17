@@ -3,32 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL_HACKER | Chat</title>
+    <title>HACKER_TERMINAL</title>
     <link rel="stylesheet" href="style.css">
+    <!-- BIBLIOTECA CENTRAL DO SUPABASE -->
+    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
     <canvas id="matrix"></canvas>
 
+    <!-- TELA DE LOGIN -->
     <div id="login-container" class="box">
         <h1>SISTEMA_INVASÃO</h1>
-        <p>IDENTIFIQUE-SE PARA ENTRAR NA REDE:</p>
-        <input type="text" id="username" placeholder="Codename..." autocomplete="off">
+        <p>IDENTIFIQUE SEU CODENAME:</p>
+        <input type="text" id="username" placeholder="Escreva aqui..." autocomplete="off">
+        <br><br>
         <button onclick="startChat()">INFILTRAR</button>
     </div>
 
-    <div id="chat-container" class="box hidden">
-        <div id="chat-header">
-            <span id="user-display">CONEXÃO_ESTABELECIDA</span>
-        </div>
+    <!-- TELA DO CHAT -->
+    <div id="chat-container" class="box" style="display: none;">
+        <div id="chat-header"> <span id="user-display">CONECTADO</span> </div>
         <div id="messages"></div>
         <div id="input-area">
-            <input type="text" id="message-input" placeholder="Digite sua mensagem...">
-            <button id="send-btn">ENVIAR</button>
+            <input type="text" id="message-input" placeholder="Comando de voz ou texto...">
+            <button id="send-btn" onclick="enviar()">ENVIAR</button>
         </div>
     </div>
 
-    <!-- Importante: Carregar o Supabase antes do script.js -->
-    <script src="https://jsdelivr.net"></script>
     <script src="script.js"></script>
 </body>
 </html>
