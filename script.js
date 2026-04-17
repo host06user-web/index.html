@@ -4,39 +4,44 @@ const SUPABASE_KEY = 'sb_publishable_v5CWKatJk5k_j4QNE0Kb8w_BpkXOFdA';
 let supabase;
 let currentUser = "";
 
-// Inicializa o Matrix e o Supabase
+// Inicia ao carregar a página
 window.onload = () => {
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     initMatrix();
 };
 
 function startChat() {
-    const user = document.getElementById('username').value;
-    if(user.trim() !== "") {
-        currentUser = user;
+    const userVal = document.getElementById('username').value;
+    if(userVal.trim() !== "") {
+        currentUser = userVal;
+        // Troca as telas usando a classe .hidden do CSS
         document.getElementById('login-container').classList.add('hidden');
         document.getElementById('chat-container').classList.remove('hidden');
-        document.getElementById('user-display').innerText = `ID: ${user}`;
-        carregarHistorico();
-        conectarRealtime();
+        document.getElementById('user-display').innerText = `ID: ${currentUser}`;
+        
+        carregarMensagens();
+        ligarRealtime();
     }
 }
 
-async function carregarHistorico() {
+async function carregarMensagens() {
     const { data } = await supabase.from('mensagens').select('*').order('created_at', { ascending: true });
-    if (data) data.forEach(m => exibirMensagem(m));
+    if (data) {
+        document.getElementById('messages').innerHTML = '';
+        data.forEach(m => exibirNaTela(m));
+    }
 }
 
-function conectarRealtime() {
-    supabase.channel('sala1').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, p => {
-        exibirMensagem(p.new);
+function ligarRealtime() {
+    supabase.channel('sala_principal').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
+        exibirNaTela(payload.new);
     }).subscribe();
 }
 
-function exibirMensagem(m) {
+function exibirNaTela(m) {
     const box = document.getElementById('messages');
     const div = document.createElement('div');
-    div.style.marginBottom = "5px";
+    div.className = 'msg-line';
     div.innerHTML = `<b style="color:white">${m.usuario}:</b> ${m.conteudo}`;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
@@ -45,15 +50,19 @@ function exibirMensagem(m) {
 async function enviar() {
     const input = document.getElementById('message-input');
     if(input.value.trim() !== "") {
-        await supabase.from('mensagens').insert([{ usuario: currentUser, conteudo: input.value }]);
+        await supabase.from('mensagens').insert([{ 
+            usuario: currentUser, 
+            conteudo: input.value 
+        }]);
         input.value = '';
     }
 }
 
-// Vincula os botões manualmente para evitar erros de clique
+// Escutadores de eventos (Melhor para tablets)
 document.getElementById('btn-login').addEventListener('click', startChat);
 document.getElementById('btn-send').addEventListener('click', enviar);
 
+// Animação Matrix
 function initMatrix() {
     const c = document.getElementById('matrix');
     const ctx = c.getContext('2d');
@@ -61,7 +70,8 @@ function initMatrix() {
     const drops = Array(Math.floor(c.width/16)).fill(1);
     setInterval(() => {
         ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,c.width,c.height);
-        ctx.fillStyle = "#00ff41"; drops.forEach((y,i) => {
+        ctx.fillStyle = "#00ff41"; ctx.font = "16px monospace";
+        drops.forEach((y,i) => {
             ctx.fillText(Math.floor(Math.random()*2), i*16, y*16);
             if(y*16 > c.height && Math.random() > 0.975) drops[i] = 0;
             drops[i]++;
