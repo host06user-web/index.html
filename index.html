@@ -3,30 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BEM VINDO</title>
+    <title>HOST CHAT</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
     <canvas id="matrix"></canvas>
 
+    <!-- LOGIN -->
     <div id="login-container" class="box">
-        <h1>HOST_CHAT</h1>
+        <h1>SLA ENTRA AI</h1>
         <p>CODENAME:</p>
         <input type="text" id="username" placeholder="Digite seu nick..." autocomplete="off">
         <br><br>
-        <button onclick="startChat()">ENTRAR</button>
+        <button id="btn-login">INFILTRAR</button>
     </div>
 
+    <!-- CHAT (COMEÇA ESCONDIDO PELO CSS) -->
     <div id="chat-container" class="box hidden">
         <div id="chat-header"><span id="user-display">CONECTADO</span></div>
         <div id="messages"></div>
         <div id="input-area">
             <input type="text" id="message-input" placeholder="Comando...">
-            <button id="send-btn" onclick="enviar()">ENVIAR</button>
+            <button id="btn-send">ENVIAR</button>
         </div>
     </div>
 
+    <!-- CARREGAMENTO DOS SCRIPTS NO FINAL -->
+    <script src="https://jsdelivr.net"></script>
     <script src="script.js"></script>
 </body>
 </html>
