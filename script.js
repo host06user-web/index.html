@@ -4,39 +4,18 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = "";
 
-// Matrix Effect
-const canvas = document.getElementById('matrix');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-const letters = "01"; const fontSize = 16;
-const columns = canvas.width / fontSize;
-const drops = Array(Math.floor(columns)).fill(1);
-function draw() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#00ff41"; ctx.font = fontSize + "px monospace";
-    drops.forEach((y, i) => {
-        const text = letters[Math.floor(Math.random() * letters.length)];
-        ctx.fillText(text, i * fontSize, y * fontSize);
-        if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-    });
-}
-setInterval(draw, 33);
-
-// Forçar o botão de Infiltrar a funcionar
-document.getElementById('infiltrar-btn').onclick = function() {
-    const name = document.getElementById('username').value;
-    if(name.trim() !== "") {
-        currentUser = name;
-        document.getElementById('login-container').style.display = 'none';
-        document.getElementById('chat-container').style.display = 'block';
-        document.getElementById('user-display').innerText = `ID: ${name}`;
+function startChat() {
+    const user = document.getElementById('username').value;
+    if(user.trim() !== "") {
+        currentUser = user;
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('chat-container').classList.remove('hidden');
+        document.getElementById('user-display').innerText = `ID: ${user}`;
         carregarHistorico();
         conectarRealtime();
-    } else {
-        alert("Digite um nome!");
+        initMatrix();
     }
-};
+}
 
 async function carregarHistorico() {
     const { data } = await supabase.from('mensagens').select('*').order('created_at', { ascending: true });
@@ -47,24 +26,39 @@ async function carregarHistorico() {
 }
 
 function conectarRealtime() {
-    supabase.channel('sala1').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
-        exibirMensagem(payload.new);
+    supabase.channel('sala1').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, p => {
+        exibirMensagem(p.new);
     }).subscribe();
 }
 
 function exibirMensagem(m) {
     const box = document.getElementById('messages');
     const div = document.createElement('div');
-    div.style.marginBottom = "8px";
-    div.innerHTML = `<b style="color:white">${m.usuario}:</b> <span style="color:#00ff41">${m.conteudo}</span>`;
+    div.style.marginBottom = "5px";
+    div.innerHTML = `<b style="color:white">${m.usuario}:</b> ${m.conteudo}`;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
 
-document.getElementById('send-btn').onclick = async function() {
+async function enviar() {
     const input = document.getElementById('message-input');
-    if(input.value) {
+    if(input.value.trim() !== "") {
         await supabase.from('mensagens').insert([{ usuario: currentUser, conteudo: input.value }]);
         input.value = '';
     }
-};
+}
+
+function initMatrix() {
+    const c = document.getElementById('matrix');
+    const ctx = c.getContext('2d');
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    const drops = Array(Math.floor(c.width/16)).fill(1);
+    setInterval(() => {
+        ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,c.width,c.height);
+        ctx.fillStyle = "#00ff41"; drops.forEach((y,i) => {
+            ctx.fillText(Math.floor(Math.random()*2), i*16, y*16);
+            if(y*16 > c.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        });
+    }, 33);
+}
