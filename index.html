@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HACKER_TERMINAL</title>
     <link rel="stylesheet" href="style.css">
-    <!-- BIBLIOTECA CENTRAL DO SUPABASE -->
+    <!-- BIBLIOTECA DO SUPABASE -->
     <script src="https://jsdelivr.net"></script>
 </head>
 <body>
@@ -14,22 +14,22 @@
     <!-- TELA DE LOGIN -->
     <div id="login-container" class="box">
         <h1>SISTEMA_INVASÃO</h1>
-        <p>IDENTIFIQUE SEU CODENAME:</p>
-        <input type="text" id="username" placeholder="Escreva aqui..." autocomplete="off">
+        <p>IDENTIFIQUE-SE:</p>
+        <input type="text" id="username" placeholder="Codename..." autocomplete="off">
         <br><br>
-        <button onclick="startChat()">INFILTRAR</button>
+        <button id="infiltrar-btn">INFILTRAR</button>
     </div>
 
     <!-- TELA DO CHAT -->
     <div id="chat-container" class="box" style="display: none;">
-        <div id="chat-header"> <span id="user-display">CONECTADO</span> </div>
+        <div id="chat-header"><span id="user-display">CONECTADO</span></div>
         <div id="messages"></div>
         <div id="input-area">
-            <input type="text" id="message-input" placeholder="Comando de voz ou texto...">
-            <button id="send-btn" onclick="enviar()">ENVIAR</button>
+            <input type="text" id="message-input" placeholder="Comando...">
+            <button id="send-btn">ENVIAR</button>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="./script.js"></script>
 </body>
 </html>
