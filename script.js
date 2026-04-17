@@ -37,18 +37,21 @@ function escutarMensagens() {
 }
 
 function exibirMensagem(msg) {
+    const box = document.getElementById('messages');
     const div = document.createElement('div');
     div.className = 'msg-bubble';
     
-    // Pegando os nomes com espaços conforme seu SQL
+    // Nomes das colunas conforme seu SQL
     const usuario = msg["texto do usuário"] || "Anon";
     const texto = msg["texto contido"] || "";
     
-    div.innerHTML = `<span class="msg-user">${usuario}:</span> ${texto}`;
-    const box = document.getElementById('messages');
+    div.innerHTML = `<span style="color: #fff; font-weight: bold;">${usuario}:</span> ${texto}`;
     box.appendChild(div);
+    
+    // Rola para o final automaticamente
     box.scrollTop = box.scrollHeight;
 }
+
 
 async function enviar() {
     const input = document.getElementById('message-input');
