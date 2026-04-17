@@ -3,30 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HACKER_TERMINAL</title>
+    <title>TERMINAL_HACKER</title>
     <link rel="stylesheet" href="style.css">
+    <!-- BIBLIOTECA SUPABASE -->
+    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
     <canvas id="matrix"></canvas>
 
+    <!-- TELA DE LOGIN -->
     <div id="login-container" class="box">
         <h1>SISTEMA_INVASÃO</h1>
-        <p>DIGITE SEU CODENAME:</p>
+        <p>IDENTIFIQUE-SE:</p>
         <input type="text" id="username" placeholder="Codename..." autocomplete="off">
         <br><br>
-        <button id="btn-login">INFILTRAR</button>
+        <button onclick="startChat()">INFILTRAR</button>
     </div>
 
+    <!-- TELA DO CHAT -->
     <div id="chat-container" class="box hidden">
-        <div id="chat-header"> <span id="user-display">CONECTADO</span> </div>
+        <div id="chat-header"><span id="user-display">CONECTADO</span></div>
         <div id="messages"></div>
-        <div id="input-area">
+        <div id="input-area" style="display: flex; gap: 5px; align-items: center;">
             <input type="text" id="message-input" placeholder="Comando...">
-            <button id="btn-send">ENVIAR</button>
+            <button id="send-btn" onclick="enviar()">ENVIAR</button>
         </div>
     </div>
 
-    <script src="https://jsdelivr.net"></script>
     <script src="script.js"></script>
 </body>
 </html>
