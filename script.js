@@ -4,11 +4,11 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = "";
 
-// EFEITO MATRIX DE FUNDO
+// Matrix Effect
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-const letters = "010101"; const fontSize = 16;
+const letters = "01"; const fontSize = 16;
 const columns = canvas.width / fontSize;
 const drops = Array(Math.floor(columns)).fill(1);
 function draw() {
@@ -23,49 +23,48 @@ function draw() {
 }
 setInterval(draw, 33);
 
-// SISTEMA DE CHAT
-function startChat() {
-    const user = document.getElementById('username').value;
-    if(user.trim() !== "") {
-        currentUser = user;
+// Forçar o botão de Infiltrar a funcionar
+document.getElementById('infiltrar-btn').onclick = function() {
+    const name = document.getElementById('username').value;
+    if(name.trim() !== "") {
+        currentUser = name;
         document.getElementById('login-container').style.display = 'none';
         document.getElementById('chat-container').style.display = 'block';
-        document.getElementById('user-display').innerText = `ID: ${user}`;
-        carregarMensagens();
-        ligarRealtime();
+        document.getElementById('user-display').innerText = `ID: ${name}`;
+        carregarHistorico();
+        conectarRealtime();
+    } else {
+        alert("Digite um nome!");
     }
-}
+};
 
-async function carregarMensagens() {
+async function carregarHistorico() {
     const { data } = await supabase.from('mensagens').select('*').order('created_at', { ascending: true });
     if (data) {
         document.getElementById('messages').innerHTML = '';
-        data.forEach(m => exibirNaTela(m));
+        data.forEach(m => exibirMensagem(m));
     }
 }
 
-function ligarRealtime() {
-    supabase.channel('geral').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
-        exibirNaTela(payload.new);
+function conectarRealtime() {
+    supabase.channel('sala1').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, payload => {
+        exibirMensagem(payload.new);
     }).subscribe();
 }
 
-function exibirNaTela(m) {
+function exibirMensagem(m) {
     const box = document.getElementById('messages');
     const div = document.createElement('div');
-    div.className = 'msg-line';
-    div.innerHTML = `<b style="color:white">${m.usuario}:</b> ${m.conteudo}`;
+    div.style.marginBottom = "8px";
+    div.innerHTML = `<b style="color:white">${m.usuario}:</b> <span style="color:#00ff41">${m.conteudo}</span>`;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
 
-async function enviar() {
+document.getElementById('send-btn').onclick = async function() {
     const input = document.getElementById('message-input');
-    if(input.value.trim() !== "") {
-        await supabase.from('mensagens').insert([{ 
-            usuario: currentUser, 
-            conteudo: input.value 
-        }]);
+    if(input.value) {
+        await supabase.from('mensagens').insert([{ usuario: currentUser, conteudo: input.value }]);
         input.value = '';
     }
-}
+};
