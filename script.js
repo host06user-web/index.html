@@ -1,8 +1,14 @@
 const SUPABASE_URL = 'https://supabase.co';
 const SUPABASE_KEY = 'sb_publishable_v5CWKatJk5k_j4QNE0Kb8w_BpkXOFdA';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let supabase;
 let currentUser = "";
+
+// Inicializa o Matrix e o Supabase
+window.onload = () => {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    initMatrix();
+};
 
 function startChat() {
     const user = document.getElementById('username').value;
@@ -13,16 +19,12 @@ function startChat() {
         document.getElementById('user-display').innerText = `ID: ${user}`;
         carregarHistorico();
         conectarRealtime();
-        initMatrix();
     }
 }
 
 async function carregarHistorico() {
     const { data } = await supabase.from('mensagens').select('*').order('created_at', { ascending: true });
-    if (data) {
-        document.getElementById('messages').innerHTML = '';
-        data.forEach(m => exibirMensagem(m));
-    }
+    if (data) data.forEach(m => exibirMensagem(m));
 }
 
 function conectarRealtime() {
@@ -47,6 +49,10 @@ async function enviar() {
         input.value = '';
     }
 }
+
+// Vincula os botões manualmente para evitar erros de clique
+document.getElementById('btn-login').addEventListener('click', startChat);
+document.getElementById('btn-send').addEventListener('click', enviar);
 
 function initMatrix() {
     const c = document.getElementById('matrix');
