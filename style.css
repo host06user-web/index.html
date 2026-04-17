@@ -25,6 +25,7 @@ canvas { position: fixed; top: 0; left: 0; z-index: -1; }
     width: 90%;
     max-width: 500px;
     text-align: center;
+    z-index: 10;
 }
 
 #messages {
@@ -38,15 +39,15 @@ canvas { position: fixed; top: 0; left: 0; z-index: -1; }
     flex-direction: column;
 }
 
-.msg-bubble { margin-bottom: 8px; font-size: 0.9em; word-wrap: break-word; }
-.msg-user { color: #fff; text-shadow: 0 0 5px var(--hacker-green); }
+.msg-bubble { margin-bottom: 8px; font-size: 0.9em; word-wrap: break-word; border-left: 2px solid var(--hacker-green); padding-left: 5px; }
+.msg-user { color: #fff; font-weight: bold; }
 
 input[type="text"] {
     background: black;
     border: 1px solid var(--hacker-green);
     color: var(--hacker-green);
     padding: 12px;
-    width: calc(100% - 30px);
+    width: 80%;
     margin-bottom: 10px;
     outline: none;
 }
@@ -58,9 +59,6 @@ button {
     padding: 12px 25px;
     cursor: pointer;
     font-weight: bold;
-    text-transform: uppercase;
 }
-
-button:active { transform: scale(0.95); opacity: 0.8; }
 
 .hidden { display: none !important; }
