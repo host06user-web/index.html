@@ -42,9 +42,16 @@ function exibirNaTela(m) {
     const box = document.getElementById('messages');
     const div = document.createElement('div');
     div.className = 'msg-line';
-    div.innerHTML = `<b style="color:white">${m.usuario}:</b> ${m.conteudo}`;
+    
+    // Pega o nick e o texto das colunas do seu banco
+    const nick = m.usuario || "Anon";
+    const texto = m.conteudo || "";
+    
+    // Formata como você pediu: [Nick] mensagem
+    div.innerHTML = `<span style="color:#00ff41">[${nick}]</span> <span style="color:white">${texto}</span>`;
+    
     box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
+    box.scrollTop = box.scrollHeight; // Rola para baixo automaticamente
 }
 
 async function enviar() {
