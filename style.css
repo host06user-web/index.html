@@ -1,18 +1,17 @@
 :root {
     --hacker-green: #00ff41;
-    --dark-bg: #0a0a0a;
 }
 
 body {
-    background-color: var(--dark-bg);
+    background-color: #000;
     color: var(--hacker-green);
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Courier New', monospace;
     margin: 0;
-    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
+    overflow: hidden;
 }
 
 canvas { position: fixed; top: 0; left: 0; z-index: -1; }
@@ -20,37 +19,31 @@ canvas { position: fixed; top: 0; left: 0; z-index: -1; }
 .box {
     background: rgba(0, 0, 0, 0.9);
     border: 2px solid var(--hacker-green);
-    box-shadow: 0 0 15px var(--hacker-green);
+    box-shadow: 0 0 20px var(--hacker-green);
     padding: 20px;
     width: 90%;
-    max-width: 500px;
+    max-width: 400px;
     text-align: center;
     z-index: 10;
 }
 
 #messages {
-    height: 300px;
+    height: 280px;
     overflow-y: auto;
-    border: 1px solid rgba(0, 255, 65, 0.2);
-    margin-bottom: 10px;
-    text-align: left;
+    border: 1px solid var(--hacker-green);
+    margin: 15px 0;
     padding: 10px;
-    display: flex;
-    flex-direction: column; /* Faz as mensagens ficarem uma embaixo da outra */
-    background: rgba(0, 0, 0, 0.5); /* Fundo levemente transparente */
-    color: #00ff41 !important; /* Força a cor verde nas mensagens */
-    }
-
-.msg-bubble { margin-bottom: 8px; font-size: 0.9em; word-wrap: break-word; border-left: 2px solid var(--hacker-green); padding-left: 5px; }
-.msg-user { color: #fff; font-weight: bold; }
+    text-align: left;
+    background: black;
+    font-size: 14px;
+}
 
 input[type="text"] {
     background: black;
     border: 1px solid var(--hacker-green);
     color: var(--hacker-green);
-    padding: 12px;
-    width: 80%;
-    margin-bottom: 10px;
+    padding: 10px;
+    width: 60%;
     outline: none;
 }
 
@@ -58,9 +51,10 @@ button {
     background: var(--hacker-green);
     color: black;
     border: none;
-    padding: 12px 25px;
+    padding: 10px 15px;
     cursor: pointer;
     font-weight: bold;
+    text-transform: uppercase;
 }
 
-.hidden { display: none !important; }
+.msg-line { margin-bottom: 8px; line-height: 1.4; }
