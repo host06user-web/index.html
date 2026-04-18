@@ -1,5 +1,5 @@
 // 1. CONFIGURAÇÕES OFICIAIS DO SEU PROJETO
-const SUPABASE_URL = 'https://supabase.co';
+const SUPABASE_URL = 'https://cupuhzytmxkduizbdqbi.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1cHVoenl0bXhrZHVpaXpiZHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0Mzg0ODcsImV4cCI6MjA5MjAxNDQ4N30.WXPnxV32hNuYk1GCT0itGWCO26OUGZBd_UDHiub-sl0';
 
 // Inicializa o cliente Supabase
