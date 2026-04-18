@@ -1,9 +1,40 @@
-:root { --hacker-green: #00ff41; }
-body { background: #000; color: var(--hacker-green); font-family: monospace; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
-.box { background: rgba(0,0,0,0.9); border: 2px solid var(--hacker-green); padding: 20px; width: 90%; max-width: 400px; text-align: center; z-index: 10; }
-#messages { height: 300px; overflow-y: auto; border: 1px solid var(--hacker-green); margin: 10px 0; padding: 10px; text-align: left; background: #000; display: flex; flex-direction: column; }
-input { background: #000; border: 1px solid var(--hacker-green); color: var(--hacker-green); padding: 10px; outline: none; margin-bottom: 5px; width: 80%; }
-button { background: var(--hacker-green); color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+:root { --neon: #00ff41; --glow: rgba(0, 255, 65, 0.3); }
+
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: 'Courier New', monospace; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+
+canvas { position: fixed; top: 0; left: 0; z-index: 1; opacity: 0.4; }
+
+.glass-box {
+    position: relative; z-index: 10;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid var(--neon);
+    box-shadow: 0 0 20px var(--glow);
+    padding: 30px; width: 90%; max-width: 500px;
+    border-radius: 8px; text-align: center;
+}
+
+#messages {
+    height: 400px; overflow-y: auto; text-align: left;
+    margin: 20px 0; padding: 15px; background: rgba(0, 20, 0, 0.5);
+    border-bottom: 1px solid var(--neon);
+}
+
+.msg-line { margin-bottom: 10px; border-left: 2px solid var(--neon); padding-left: 10px; animation: fadeIn 0.3s; }
+
+input {
+    background: #000; border: 1px solid var(--neon); color: var(--neon);
+    padding: 12px; outline: none; width: 100%; box-sizing: border-box;
+}
+
+.btn-glow {
+    background: var(--neon); color: #000; border: none; font-weight: bold;
+    padding: 12px 25px; margin-top: 15px; cursor: pointer; transition: 0.3s;
+}
+
+.btn-glow:hover { box-shadow: 0 0 20px var(--neon); }
+
 .hidden { display: none !important; }
-.msg-line { margin-bottom: 5px; font-size: 14px; line-height: 1.4; }
+
+.glow-text { text-shadow: 0 0 10px var(--neon); color: var(--neon); }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
