@@ -6,13 +6,16 @@ let currentUser = "";
 
 function startChat() {
     const user = document.getElementById('username').value;
+    
     if(user.trim() !== "") {
         currentUser = user;
-        // MUDA A TELA NA HORA
+        
+        // MUDA A TELA ANTES DE TUDO
         document.getElementById('login-container').classList.add('hidden');
         document.getElementById('chat-container').classList.remove('hidden');
         document.getElementById('user-display').innerText = `ID: ${user}`;
         
+        // DEPOIS TENTA CARREGAR OS DADOS
         carregarHistorico();
         conectarRealtime();
         initMatrix();
