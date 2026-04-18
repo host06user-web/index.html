@@ -1,5 +1,5 @@
 // CONFIGURAÇÕES DO SUPABASE (Verifique se os seus dados estão iguais a estes)
-const SUPABASE_URL = 'https://supabase.co'; 
+const SUPABASE_URL = 'https://cupuhzytmxkduiizbdqb.supabase.co'; 
 const SUPABASE_KEY = 'sb_publishable_v5CWKatJk5k_j4QNE0Kb8w_BpkXOFdA';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
