@@ -3,33 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL_HACKER</title>
+    <title>TERMINAL_CHAT_V2</title>
     <link rel="stylesheet" href="style.css">
-    <!-- BIBLIOTECA SUPABASE -->
-    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
     <canvas id="matrix"></canvas>
 
     <!-- TELA DE LOGIN -->
-    <div id="login-container" class="box">
-        <h1>SISTEMA_INVASÃO</h1>
-        <p>IDENTIFIQUE-SE:</p>
+    <div id="login-container" class="glass-box">
+        <h1 class="glow-text">SYSTEM_ACCESS</h1>
+        <p>IDENTIFIQUE-SE PARA INFILTRAR:</p>
         <input type="text" id="username" placeholder="Codename..." autocomplete="off">
-        <br><br>
-        <button onclick="startChat()">INFILTRAR</button>
+        <button onclick="startChat()" class="btn-glow">CONECTAR</button>
     </div>
 
     <!-- TELA DO CHAT -->
-    <div id="chat-container" class="box hidden">
-        <div id="chat-header"><span id="user-display">CONECTADO</span></div>
+    <div id="chat-container" class="glass-box hidden">
+        <div id="chat-header">
+            <span class="status-dot"></span>
+            <span id="user-display">ONLINE</span>
+        </div>
         <div id="messages"></div>
-        <div id="input-area" style="display: flex; gap: 5px; align-items: center;">
-            <input type="text" id="message-input" placeholder="Comando...">
-            <button id="send-btn" onclick="enviar()">ENVIAR</button>
+        <div class="input-group">
+            <input type="text" id="message-input" placeholder="Digite uma mensagem...">
+            <button onclick="enviar()">SEND</button>
         </div>
     </div>
 
+    <!-- BIBLIOTECA SUPABASE -->
+    <script src="https://jsdelivr.net"></script>
     <script src="script.js"></script>
 </body>
 </html>
