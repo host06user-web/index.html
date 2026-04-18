@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TERMINAL_CHAT_V2</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -20,18 +20,23 @@
     <!-- TELA DO CHAT -->
     <div id="chat-container" class="glass-box hidden">
         <div id="chat-header">
-            <span class="status-dot"></span>
-            <span id="user-display">ONLINE</span>
+            <div class="status-info">
+                <span class="status-dot"></span>
+                <span id="user-display">ONLINE</span>
+            </div>
+            <button onclick="location.reload()" class="btn-exit">SAIR</button>
         </div>
         <div id="messages"></div>
         <div class="input-group">
             <input type="text" id="message-input" placeholder="Digite uma mensagem...">
-            <button onclick="enviar()">SEND</button>
+            <button onclick="enviar()" class="btn-send">SEND</button>
         </div>
     </div>
 
-    <!-- BIBLIOTECA SUPABASE -->
+    <!-- BIBLIOTECA SUPABASE (Sempre antes do seu script.js) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- SEU SCRIPT DE LÓGICA -->
     <script src="script.js"></script>
 </body>
 </html>
