@@ -7,7 +7,7 @@
 
 body {
     background-color: black;
-    overflow: hidden; /* Impede scroll na tela inteira */
+    overflow: hidden;
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -25,9 +25,8 @@ body {
     display: none !important;
 }
 
-/* CONTAINER ESTILO VIDRO */
 .glass-box {
-    background: rgba(0, 20, 0, 0.8);
+    background: rgba(0, 20, 0, 0.85);
     border: 2px solid #00ff41;
     box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
     padding: 20px;
@@ -41,9 +40,9 @@ body {
 .glow-text {
     text-shadow: 0 0 10px #00ff41;
     margin-bottom: 20px;
+    font-size: 1.5rem;
 }
 
-/* INPUTS E BOTÕES */
 input {
     width: 100%;
     padding: 12px;
@@ -52,12 +51,14 @@ input {
     color: #00ff41;
     margin-bottom: 15px;
     outline: none;
+    font-size: 16px; /* Evita zoom no iOS */
 }
 
 button {
     cursor: pointer;
     transition: 0.3s;
     font-weight: bold;
+    text-transform: uppercase;
 }
 
 .btn-glow {
@@ -70,11 +71,11 @@ button {
 
 .btn-glow:hover {
     box-shadow: 0 0 15px #00ff41;
+    background: #00cc33;
 }
 
-/* LAYOUT DO CHAT */
 #chat-container {
-    height: 80vh;
+    height: 85vh;
     display: flex;
     flex-direction: column;
 }
@@ -93,14 +94,15 @@ button {
     text-align: left;
     margin: 15px 0;
     padding: 10px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px id #003300;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #00ff41;
 }
 
 .msg-line {
     margin-bottom: 8px;
     word-wrap: break-word;
     font-size: 14px;
+    line-height: 1.4;
 }
 
 .input-group {
@@ -116,17 +118,17 @@ button {
     background: #00ff41;
     border: none;
     padding: 0 20px;
+    color: black;
 }
 
 .btn-exit {
     background: transparent;
-    border: 1px solid red;
-    color: red;
-    padding: 2px 8px;
-    font-size: 10px;
+    border: 1px solid #ff0000;
+    color: #ff0000;
+    padding: 4px 10px;
+    font-size: 12px;
 }
 
-/* STATUS DOT */
 .status-dot {
     height: 10px;
     width: 10px;
@@ -134,12 +136,15 @@ button {
     border-radius: 50%;
     display: inline-block;
     margin-right: 5px;
-    box-shadow: 0 0 5px #00ff41;
+    box-shadow: 0 0 8px #00ff41;
 }
 
-/* SCROLLBAR CUSTOMIZADA (ESTILO HACKER) */
+/* SCROLLBAR CUSTOM */
 #messages::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
+}
+#messages::-webkit-scrollbar-track {
+    background: #000;
 }
 #messages::-webkit-scrollbar-thumb {
     background: #00ff41;
