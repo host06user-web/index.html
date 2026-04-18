@@ -1,40 +1,146 @@
-:root { --neon: #00ff41; --glow: rgba(0, 255, 65, 0.3); }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Courier New', Courier, monospace;
+}
 
-body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: 'Courier New', monospace; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+body {
+    background-color: black;
+    overflow: hidden; /* Impede scroll na tela inteira */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-canvas { position: fixed; top: 0; left: 0; z-index: 1; opacity: 0.4; }
+#matrix {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
 
+.hidden {
+    display: none !important;
+}
+
+/* CONTAINER ESTILO VIDRO */
 .glass-box {
-    position: relative; z-index: 10;
-    background: rgba(0, 0, 0, 0.85);
-    border: 1px solid var(--neon);
-    box-shadow: 0 0 20px var(--glow);
-    padding: 30px; width: 90%; max-width: 500px;
-    border-radius: 8px; text-align: center;
+    background: rgba(0, 20, 0, 0.8);
+    border: 2px solid #00ff41;
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 10px;
+    text-align: center;
+    color: #00ff41;
 }
 
-#messages {
-    height: 400px; overflow-y: auto; text-align: left;
-    margin: 20px 0; padding: 15px; background: rgba(0, 20, 0, 0.5);
-    border-bottom: 1px solid var(--neon);
+.glow-text {
+    text-shadow: 0 0 10px #00ff41;
+    margin-bottom: 20px;
 }
 
-.msg-line { margin-bottom: 10px; border-left: 2px solid var(--neon); padding-left: 10px; animation: fadeIn 0.3s; }
-
+/* INPUTS E BOTÕES */
 input {
-    background: #000; border: 1px solid var(--neon); color: var(--neon);
-    padding: 12px; outline: none; width: 100%; box-sizing: border-box;
+    width: 100%;
+    padding: 12px;
+    background: black;
+    border: 1px solid #00ff41;
+    color: #00ff41;
+    margin-bottom: 15px;
+    outline: none;
+}
+
+button {
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: bold;
 }
 
 .btn-glow {
-    background: var(--neon); color: #000; border: none; font-weight: bold;
-    padding: 12px 25px; margin-top: 15px; cursor: pointer; transition: 0.3s;
+    background: #00ff41;
+    color: black;
+    border: none;
+    padding: 12px 25px;
+    width: 100%;
 }
 
-.btn-glow:hover { box-shadow: 0 0 20px var(--neon); }
+.btn-glow:hover {
+    box-shadow: 0 0 15px #00ff41;
+}
 
-.hidden { display: none !important; }
+/* LAYOUT DO CHAT */
+#chat-container {
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
 
-.glow-text { text-shadow: 0 0 10px var(--neon); color: var(--neon); }
+#chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #00ff41;
+}
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+#messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    text-align: left;
+    margin: 15px 0;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px id #003300;
+}
+
+.msg-line {
+    margin-bottom: 8px;
+    word-wrap: break-word;
+    font-size: 14px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.input-group input {
+    margin-bottom: 0;
+}
+
+.btn-send {
+    background: #00ff41;
+    border: none;
+    padding: 0 20px;
+}
+
+.btn-exit {
+    background: transparent;
+    border: 1px solid red;
+    color: red;
+    padding: 2px 8px;
+    font-size: 10px;
+}
+
+/* STATUS DOT */
+.status-dot {
+    height: 10px;
+    width: 10px;
+    background-color: #00ff41;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+    box-shadow: 0 0 5px #00ff41;
+}
+
+/* SCROLLBAR CUSTOMIZADA (ESTILO HACKER) */
+#messages::-webkit-scrollbar {
+    width: 5px;
+}
+#messages::-webkit-scrollbar-thumb {
+    background: #00ff41;
+}
