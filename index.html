@@ -3,307 +3,344 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Planner Casa - Planta Baixa 2D</title>
-    <!-- Carregando biblioteca Fabric.js (para desenho vetorial e suporte a toque) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <title>Planner Casa Tablet</title>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #f0f0f0; overflow: hidden; }
+        body { margin: 0; font-family: sans-serif; background: #e0e0e0; overflow: hidden; touch-action: none; }
         
-        /* Barra de ferramentas responsiva */
         #toolbar { 
-            background: #333; color: white; padding: 10px; display: flex; gap: 10px; flex-wrap: wrap;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; position: relative;
+            position: absolute; top: 0; left: 0; right: 0; background: #333; color: white; padding: 10px; 
+            display: flex; gap: 5px; flex-wrap: wrap; z-index: 10; border-bottom: 2px solid #555;
         }
-        button, select {
-            padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer;
-            background: #555; color: white; font-size: 14px; touch-action: manipulation;
+        #toolbar button, #toolbar select, #toolbar input {
+            padding: 8px 10px; border: none; border-radius: 5px; cursor: pointer; background: #555; 
+            color: white; font-size: 12px; touch-action: manipulation;
         }
-        button:hover, select:hover { background: #777; }
-        button.active { background: #4CAF50; }
+        #toolbar button.active { background: #4CAF50; }
+        #toolbar input { width: 60px; text-align: center; }
         
-        /* Área do Canvas */
-        #canvas-container {
-            width: 100%; height: calc(100vh - 50px); background: #e0e0e0;
-        }
-        canvas { display: block; }
-
-        /* Painel de propriedades (escondido no tablet para não atrapalhar) */
-        #prop-panel {
-            position: absolute; right: 10px; top: 60px; background: rgba(255,255,255,0.95);
-            padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none;
-            font-size: 12px; max-width: 200px;
-        }
-        #prop-panel input { width: 100%; margin-bottom: 5px; }
+        #canvas { position: absolute; top: 50px; left: 0; width: 100%; height: calc(100% - 50px); background: white; cursor: crosshair; }
         
-        /* Instruções rápidas */
-        #status { position: absolute; left: 10px; bottom: 10px; background: white; padding: 5px; border-radius: 5px; }
+        #painel { 
+            position: absolute; bottom: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: none; z-index: 20;
+        }
+        
+        #instrucao { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px; border-radius: 5px; font-size: 12px; }
     </style>
 </head>
 <body>
     <div id="toolbar">
-        <h3 style="margin:0 10px 0 0;">🏠 Editor</h3>
-        <button id="btn-select" class="active">🖱️ Selecionar</button>
+        <button id="btn-rect" class="active">🏠 Retângulo</button>
         <button id="btn-wall">🧱 Parede</button>
-        <button id="btn-door">🚪 Porta</button>
-        <button id="btn-window">🪟 Janela</button>
-        <select id="furniture-select">
-            <option value="">Móveis...</option>
-            <option value="cama">Cama</option>
-            <option value="sofa">Sofá</option>
-            <option value="mesa">Mesa</option>
-        </select>
-        <button id="btn-measure">📏 Medir</button>
-        <button id="btn-delete">🗑️ Excluir</button>
-        <button id="btn-clear">Limpar Tudo</button>
+        <button id="btn-text">🔤 Texto</button>
+        <button id="btn-img">🖼️ Imagem</button>
+        <button id="btn-draw">✏️ Desenhar</button>
+        <button id="btn-select">🖱️ Mover</button>
+        <button id="btn-del">🗑️ Apagar</button>
+        <button id="btn-save">💾 Salvar</button>
+        <button id="btn-load">📂 Abrir</button>
+        <button id="btn-clear">🧹 Limpar</button>
+        <label style="font-size:12px;">Espessura Parede:</label><input type="number" id="wall-thickness" value="10">
     </div>
 
-    <div id="canvas-container"></div>
+    <canvas id="canvas"></canvas>
     
-    <div id="prop-panel">
-        <strong>Propriedades</strong><br>
-        <label>Comprimento (cm): <input type="number" id="prop-len"></label>
-        <label>Espessura (cm): <input type="number" id="prop-thick"></label>
+    <div id="painel">
+        <label>Texto:</label>
+        <input type="text" id="text-input">
+        <button id="btn-add-text">Adicionar</button>
+        <input type="file" id="img-input" accept="image/*" style="display:none;">
     </div>
 
-    <div id="status">Clique em "Parede" para começar a desenhar!</div>
+    <div id="instrucao">Modo: Retângulo</div>
 
     <script>
-        // ==================== CONFIGURAÇÃO ====================
-        const canvas = new fabric.Canvas('c', {
-            selection: true,
-            preserveObjectStacking: true,
-            backgroundColor: '#fff'
-        });
+        // ================== CONFIGURAÇÃO ==================
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const painel = document.getElementById('painel');
+        const instrucao = document.getElementById('instrucao');
 
-        // Responsividade: Ajustar o canvas para o tamanho da tela
-        const container = document.getElementById('canvas-container');
-        function resizeCanvas() {
-            canvas.setWidth(container.clientWidth);
-            canvas.setHeight(container.clientHeight);
-            canvas.renderAll();
+        // Ajuste para tela do tablet
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - 50;
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        window.addEventListener('resize', resize);
+        resize();
 
-        // Variáveis de estado
-        let currentTool = 'select';
-        let startPoint = null;
-        let currentWall = null;
-        let currentLine = null;
+        // Estado geral
+        let tool = 'rect';
+        let objetos = []; // Guarda todos os objetos criados
+        let selecionado = null;
+        
+        // Variáveis de desenho
+        let rectStart = null;
+        let wallStart = null;
+        let drawStart = null;
+        let drawing = false;
 
-        // ==================== FUNÇÕES BÁSICAS ====================
-        function setTool(tool) {
-            currentTool = tool;
-            document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-            if (tool === 'select') document.getElementById('btn-select').classList.add('active');
-            if (tool === 'wall') document.getElementById('btn-wall').classList.add('active');
-            if (tool === 'door') document.getElementById('btn-door').classList.add('active');
-            if (tool === 'window') document.getElementById('btn-window').classList.add('active');
-            if (tool === 'measure') document.getElementById('btn-measure').classList.add('active');
-            
-            if (tool !== 'select') canvas.selection = false;
-            else canvas.selection = true;
+        // ================== CLASSES DE OBJETOS ==================
+        class Objeto {
+            constructor(tipo) { this.tipo = tipo; this.id = Date.now() + Math.random(); }
+            draw() {}
+            hitTest(x, y) { return false; }
         }
 
-        // Criação de objetos visuais
-        function createWall(x1, y1, x2, y2) {
-            const wall = new fabric.Line([x1, y1, x2, y2], {
-                stroke: '#000',
-                strokeWidth: 10, // Espessura da parede
-                selectable: true,
-                hasBorders: false,
-                perPixelTargetFind: true, // Permite clicar na linha grossa
-                objectCaching: false
-            });
-            wall.customType = 'wall';
-            return wall;
-        }
-
-        function createDoor(x, y, angle, width = 50) {
-            const group = new fabric.Group([
-                new fabric.Line([0, 0, width, 0], { stroke: '#e67e22', strokeWidth: 3 }),
-                new fabric.Circle({ radius: 10, left: width/2 - 10, top: -5, fill: 'transparent', stroke: '#e67e22' })
-            ], { left: x, top: y, angle: angle, originX: 'center', originY: 'center' });
-            group.customType = 'door';
-            return group;
-        }
-
-        function createWindow(x1, y1, x2, y2) {
-            const windowLine = new fabric.Line([x1, y1, x2, y2], {
-                stroke: '#3498db', strokeWidth: 4, selectable: true
-            });
-            windowLine.customType = 'window';
-            return windowLine;
-        }
-
-        function createFurniture(type, x, y) {
-            let obj;
-            if (type === 'cama') {
-                obj = new fabric.Rect({ width: 80, height: 120, fill: '#ecf0f1', stroke: '#333', strokeWidth: 2 });
-                obj.customType = 'cama';
-                obj.set({ left: x, top: y });
-            } else if (type === 'sofa') {
-                obj = new fabric.Rect({ width: 150, height: 60, fill: '#e74c3c', stroke: '#333', strokeWidth: 2 });
-                obj.customType = 'sofa';
-                obj.set({ left: x, top: y });
-            } else if (type === 'mesa') {
-                obj = new fabric.Rect({ width: 80, height: 80, fill: '#f1c40f', stroke: '#333', strokeWidth: 2 });
-                obj.customType = 'mesa';
-                obj.set({ left: x, top: y });
+        class Retangulo extends Objeto {
+            constructor(x1, y1, x2, y2) {
+                super('rect');
+                this.x1 = Math.min(x1, x2); this.y1 = Math.min(y1, y2);
+                this.x2 = Math.max(x1, x2); this.y2 = Math.max(y1, y2);
             }
-            obj.set({ originX: 'center', originY: 'center' });
-            return obj;
+            draw() {
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(this.x1, this.y1, this.x2-this.x1, this.y2-this.y1);
+            }
+            hitTest(x, y) { return x >= this.x1 && x <= this.x2 && y >= this.y1 && y <= this.y2; }
         }
 
-        // ==================== EVENTOS DE INTERAÇÃO ====================
-        canvas.on('mouse:down', function(opt) {
-            const pointer = canvas.getPointer(opt.e);
-            
-            if (currentTool === 'wall') {
-                if (!startPoint) {
-                    startPoint = { x: pointer.x, y: pointer.y };
-                    currentLine = createWall(pointer.x, pointer.y, pointer.x, pointer.y);
-                    canvas.add(currentLine);
-                } else {
-                    // Fecha a parede
-                    const endPoint = { x: pointer.x, y: pointer.y };
-                    // Adiciona medida (cota) na parede
-                    addMeasurement(startPoint, endPoint);
-                    startPoint = null;
-                    currentLine = null;
+        class Parede extends Objeto {
+            constructor(x1, y1, x2, y2, espessura) {
+                super('wall');
+                this.x1 = x1; this.y1 = y1; this.x2 = x2; this.y2 = y2;
+                this.espessura = espessura;
+            }
+            draw() {
+                ctx.strokeStyle = '#333'; ctx.lineWidth = this.espessura; ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.moveTo(this.x1, this.y1); ctx.lineTo(this.x2, this.y2); ctx.stroke();
+                // Linha central
+                ctx.strokeStyle = '#888'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+                ctx.beginPath(); ctx.moveTo(this.x1, this.y1); ctx.lineTo(this.x2, this.y2); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            hitTest(x, y) {
+                const dist = Math.abs((this.y2-this.y1)*x - (this.x2-this.x1)*y + this.x2*this.y1 - this.y2*this.x1) / Math.sqrt(Math.pow(this.y2-this.y1,2)+Math.pow(this.x2-this.x1,2));
+                return dist <= this.espessura/2 + 5;
+            }
+        }
+
+        class Texto extends Objeto {
+            constructor(x, y, texto) {
+                super('text');
+                this.x = x; this.y = y; this.texto = texto;
+            }
+            draw() {
+                ctx.fillStyle = '#000'; ctx.font = '16px sans-serif'; ctx.fillText(this.texto, this.x, this.y);
+            }
+            hitTest(x, y) { return Math.abs(x-this.x) < 50 && Math.abs(y-this.y) < 20; }
+        }
+
+        class ImagemObj extends Objeto {
+            constructor(x, y, img) {
+                super('img');
+                this.x = x; this.y = y; this.img = img; this.w = img.width / 2; this.h = img.height / 2;
+            }
+            draw() { ctx.drawImage(this.img, this.x - this.w/2, this.y - this.h/2, this.w, this.h); }
+            hitTest(x, y) { return x >= this.x - this.w/2 && x <= this.x + this.w/2 && y >= this.y - this.h/2 && y <= this.y + this.h/2; }
+        }
+
+        class Desenho extends Objeto {
+            constructor(points) {
+                super('draw');
+                this.points = points; // Array de pontos {x, y}
+            }
+            draw() {
+                ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(this.points[0].x, this.points[0].y);
+                for (let i = 1; i < this.points.length; i++) ctx.lineTo(this.points[i].x, this.points[i].y);
+                ctx.stroke();
+            }
+            hitTest(x, y) {
+                // Verifica se está perto de algum ponto
+                return this.points.some(p => Math.hypot(p.x-x, p.y-y) < 10);
+            }
+        }
+
+        // ================== FUNÇÕES DE DESENHO E SELEÇÃO ==================
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            objetos.forEach(o => {
+                if (o === selecionado) {
+                    ctx.save();
+                    ctx.strokeStyle = '#0969da'; ctx.lineWidth = 2; ctx.setLineDash([5,5]);
+                    if (o.tipo === 'rect' || o.tipo === 'img') ctx.strokeRect(o.x1 || o.x - (o.w/2), o.y1 || o.y - (o.h/2), (o.x2 || o.x + (o.w/2)) - (o.x1 || o.x - (o.w/2)), (o.y2 || o.y + (o.h/2)) - (o.y1 || o.y - (o.h/2)));
+                    else if (o.tipo === 'wall') { ctx.beginPath(); ctx.moveTo(o.x1, o.y1); ctx.lineTo(o.x2, o.y2); ctx.stroke(); }
+                    else { ctx.fillStyle = 'rgba(9,105,218,0.2)'; ctx.fillRect(o.x-30, o.y-20, 60, 40); }
+                    ctx.restore();
                 }
-            } 
-            else if (currentTool === 'door') {
-                const door = createDoor(pointer.x, pointer.y, 45, 60);
-                canvas.add(door);
+                o.draw();
+            });
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        }
+
+        // ================== EVENTOS DE TOQUE E MOUSE (Tablet) ==================
+        canvas.addEventListener('pointerdown', (e) => {
+            const pos = getPos(e);
+            if (tool === 'select') {
+                selecionado = null;
+                for (let i = objetos.length - 1; i >= 0; i--) {
+                    if (objetos[i].hitTest(pos.x, pos.y)) { selecionado = objetos[i]; break; }
+                }
+                render();
             }
-            else if (currentTool === 'window') {
-                const windowObj = createWindow(pointer.x-30, pointer.y, pointer.x+30, pointer.y);
-                canvas.add(windowObj);
+            else if (tool === 'rect') {
+                rectStart = pos; drawing = true;
             }
-            else if (currentTool === 'measure') {
-                if (!startPoint) {
-                    startPoint = pointer;
-                } else {
-                    addMeasurement(startPoint, pointer);
-                    startPoint = null;
+            else if (tool === 'wall') {
+                wallStart = pos; drawing = true;
+            }
+            else if (tool === 'draw') {
+                drawStart = [{ x: pos.x, y: pos.y }]; drawing = true;
+            }
+            else if (tool === 'text') {
+                painel.style.display = 'block';
+                window._textPos = pos;
+                document.getElementById('text-input').focus();
+            }
+            else if (tool === 'img') {
+                document.getElementById('img-input').click();
+            }
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!drawing) return;
+            const pos = getPos(e);
+            if (tool === 'draw') {
+                drawStart.push({ x: pos.x, y: pos.y });
+            }
+            render();
+        });
+
+        canvas.addEventListener('pointerup', (e) => {
+            if (!drawing) return;
+            const pos = getPos(e);
+            drawing = false;
+
+            if (tool === 'rect') {
+                if (pos.x > rectStart.x + 10 && pos.y > rectStart.y + 10) {
+                    objetos.push(new Retangulo(rectStart.x, rectStart.y, pos.x, pos.y));
                 }
             }
-            else if (currentTool === 'select') {
-                // Lógica de seleção já é feita pelo Fabric.js automaticamente
+            else if (tool === 'wall') {
+                // Acoplamento magnético (snap) em outras paredes
+                let snappedPoint = pos;
+                for (let i = 0; i < objetos.length; i++) {
+                    let o = objetos[i];
+                    if (o.tipo === 'wall') {
+                        if (Math.hypot(pos.x - o.x1, pos.y - o.y1) < 15) snappedPoint = { x: o.x1, y: o.y1 };
+                        if (Math.hypot(pos.x - o.x2, pos.y - o.y2) < 15) snappedPoint = { x: o.x2, y: o.y2 };
+                    }
+                    if (o.tipo === 'rect') {
+                        if (Math.hypot(pos.x - o.x1, pos.y - o.y1) < 15) snappedPoint = { x: o.x1, y: o.y1 };
+                        if (Math.hypot(pos.x - o.x2, pos.y - o.y2) < 15) snappedPoint = { x: o.x2, y: o.y2 };
+                    }
+                }
+                const esp = parseInt(document.getElementById('wall-thickness').value) || 10;
+                objetos.push(new Parede(wallStart.x, wallStart.y, snappedPoint.x, snappedPoint.y, esp));
             }
+            else if (tool === 'draw') {
+                if (drawStart.length > 3) objetos.push(new Desenho(drawStart));
+            }
+            render();
         });
 
-        // Desenhar paredes dinamicamente
-        canvas.on('mouse:move', function(opt) {
-            if (currentTool === 'wall' && startPoint) {
-                const pointer = canvas.getPointer(opt.e);
-                currentLine.set({ x2: pointer.x, y2: pointer.y });
-                canvas.renderAll();
-            }
-        });
-
-        // Suporte a toque no tablet (Fabric.js já trata, mas aqui vai a dica)
-        canvas.on('touch:gesture', function(opt) {
-            // Permitir zoom e pan com gestos de pinça
-            if (opt.e.touches && opt.e.touches.length === 2) {
-                canvas.setZoom(canvas.getZoom() * 1.01);
-                canvas.renderAll();
-            }
-        });
-
-        // Painel de propriedades ao selecionar
-        canvas.on('selection:created', updatePanel);
-        canvas.on('selection:updated', updatePanel);
-        canvas.on('selection:cleared', function() { document.getElementById('prop-panel').style.display = 'none'; });
-
-        function updatePanel() {
-            const activeObj = canvas.getActiveObject();
-            if (!activeObj) return;
-            
-            const panel = document.getElementById('prop-panel');
-            const lenInput = document.getElementById('prop-len');
-            const thickInput = document.getElementById('prop-thick');
-            
-            if (activeObj.customType === 'wall') {
-                panel.style.display = 'block';
-                const len = Math.sqrt(Math.pow(activeObj.x2 - activeObj.x1, 2) + Math.pow(activeObj.y2 - activeObj.y1, 2)) / 2;
-                lenInput.value = Math.round(len); // Convertendo pixel para cm (aprox)
-                thickInput.value = activeObj.strokeWidth;
-            } else {
-                panel.style.display = 'none';
-            }
+        // ================== CONTROLES DA BARRA ==================
+        function setTool(t) {
+            tool = t;
+            document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            const btnMap = { 'rect': 'btn-rect', 'wall': 'btn-wall', 'text': 'btn-text', 'img': 'btn-img', 'draw': 'btn-draw', 'select': 'btn-select' };
+            document.getElementById(btnMap[t]).classList.add('active');
+            instrucao.textContent = "Modo: " + t.toUpperCase();
         }
 
-        // Função para criar as "Cotas" (Medidas) na planta
-        function addMeasurement(p1, p2) {
-            const dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
-            const text = new fabric.Text(Math.round(dist) + ' cm', {
-                fontSize: 14, fill: '#000', originX: 'center', originY: 'bottom',
-                left: (p1.x + p2.x) / 2, top: (p1.y + p2.y) / 2 - 10
-            });
-            
-            // Linha da cota
-            const line = new fabric.Line([p1.x, p1.y, p2.x, p2.y], {
-                stroke: '#555', strokeWidth: 1, strokeDashArray: [5, 5]
-            });
-            
-            const group = new fabric.Group([line, text], { selectable: false, evented: false });
-            canvas.add(group);
-        }
-
-        // ==================== CONTROLES DA BARRA ====================
-        document.getElementById('btn-select').onclick = () => setTool('select');
+        document.getElementById('btn-rect').onclick = () => setTool('rect');
         document.getElementById('btn-wall').onclick = () => setTool('wall');
-        document.getElementById('btn-door').onclick = () => setTool('door');
-        document.getElementById('btn-window').onclick = () => setTool('window');
-        document.getElementById('btn-measure').onclick = () => setTool('measure');
+        document.getElementById('btn-select').onclick = () => setTool('select');
+        document.getElementById('btn-text').onclick = () => setTool('text');
+        document.getElementById('btn-draw').onclick = () => setTool('draw');
+        document.getElementById('btn-img').onclick = () => setTool('img');
 
-        // Seleção de móveis
-        document.getElementById('furniture-select').onchange = function(e) {
-            const type = e.target.value;
-            if (type) {
-                const furniture = createFurniture(type, 300, 300);
-                canvas.add(furniture);
-                e.target.value = '';
+        // Adicionar texto
+        document.getElementById('btn-add-text').onclick = () => {
+            const txt = document.getElementById('text-input').value;
+            if (txt && window._textPos) {
+                objetos.push(new Texto(window._textPos.x, window._textPos.y, txt));
+                painel.style.display = 'none';
+                document.getElementById('text-input').value = '';
+                render();
             }
         };
 
-        // Excluir e Limpar
-        document.getElementById('btn-delete').onclick = () => {
-            const activeObjs = canvas.getActiveObjects();
-            if (activeObjs.length) {
-                canvas.discardActiveObject();
-                activeObjs.forEach(obj => canvas.remove(obj));
-                canvas.renderAll();
+        // Upload de imagem
+        document.getElementById('img-input').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        if (window._textPos) {
+                            objetos.push(new ImagemObj(window._textPos.x, window._textPos.y, img));
+                            render();
+                        }
+                    };
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
             }
+        };
+
+        // Apagar, Salvar, Carregar, Limpar
+        document.getElementById('btn-del').onclick = () => {
+            if (selecionado) {
+                objetos = objetos.filter(o => o !== selecionado);
+                selecionado = null;
+                render();
+            }
+        };
+
+        document.getElementById('btn-save').onclick = () => {
+            const dados = JSON.stringify(objetos.map(o => {
+                if (o.tipo === 'img') return { tipo: 'img', x: o.x, y: o.y, src: o.img.src, w: o.w, h: o.h };
+                return o;
+            }));
+            // Download do arquivo
+            const a = document.createElement('a');
+            a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(dados);
+            a.download = 'planta.json';
+            a.click();
+        };
+
+        document.getElementById('btn-load').onclick = () => {
+            const input = document.createElement('input');
+            input.type = 'file'; input.accept = '.json';
+            input.onchange = (e) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    objetos = JSON.parse(ev.target.result);
+                    objetos.forEach(o => {
+                        if (o.tipo === 'img') {
+                            const img = new Image();
+                            img.src = o.src; o.img = img;
+                        }
+                    });
+                    render();
+                };
+                reader.readAsText(e.target.files[0]);
+            };
+            input.click();
         };
 
         document.getElementById('btn-clear').onclick = () => {
-            canvas.clear();
-            canvas.backgroundColor = '#fff';
-            canvas.renderAll();
+            if (confirm('Limpar tudo?')) { objetos = []; selecionado = null; render(); }
         };
 
-        // Zoom e pan (deslocamento)
-        canvas.on('mouse:wheel', function(opt) {
-            const delta = opt.e.deltaY;
-            let zoom = canvas.getZoom();
-            zoom *= 0.999 ** delta;
-            if (zoom > 20) zoom = 20;
-            if (zoom < 0.5) zoom = 0.5;
-            canvas.setZoom(zoom);
-            canvas.renderAll();
-        });
-
-        // Botões de utilidade
-        document.getElementById('btn-clear').onclick = function() {
-            if(confirm("Tem certeza que deseja limpar todo o projeto?")) {
-                canvas.clear();
-                canvas.backgroundColor = '#fff';
-                canvas.renderAll();
-            }
-        };
+        // Render inicial
+        render();
     </script>
 </body>
 </html>
