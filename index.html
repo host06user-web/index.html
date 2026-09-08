@@ -1,42 +1,1603 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TERMINAL_CHAT_V2</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planner Casa - Editor de Plantas 2D</title>
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --panel: #ffffff;
+            --border: #d0d7de;
+            --text: #24292f;
+            --accent: #0969da;
+            --accent-hover: #0550ae;
+            --danger: #cf222e;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+        header {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+        header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+        .toolbar {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .tool-btn {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .tool-btn:hover { background: #f6f8fa; }
+        .tool-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .tool-btn.danger { color: var(--danger); }
+        .tool-btn.danger:hover { background: #fff0f0; }
+        .separator {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            margin: 0 4px;
+        }
+        .furniture-submenu {
+            display: none;
+            position: absolute;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            padding: 8px;
+            z-index: 50;
+            gap: 4px;
+            flex-wrap: wrap;
+            width: 260px;
+        }
+        .furniture-submenu.show { display: flex; }
+        .furniture-option {
+            background: #f6f8fa;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+            flex: 1 1 40%;
+        }
+        .furniture-option:hover {
+            background: #eaeef2;
+            border-color: var(--accent);
+        }
+        main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+        }
+        .properties-panel {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: var(--shadow);
+            width: 240px;
+            display: none;
+            z-index: 20;
+        }
+        .properties-panel.show { display: block; }
+        .properties-panel h3 {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+        }
+        .prop-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            gap: 8px;
+        }
+        .prop-row label {
+            font-size: 0.8rem;
+            width: 60px;
+            flex-shrink: 0;
+        }
+        .prop-row input, .prop-row select {
+            flex: 1;
+            padding: 4px 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: #f6f8fa;
+            cursor: pointer;
+        }
+        .btn-small:hover { background: #eaeef2; }
+        .btn-danger { background: #fff0f0; color: var(--danger); border-color: #ffc0c0; }
+        .btn-danger:hover { background: #ffe0e0; }
+        .status-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            border-top: 1px solid var(--border);
+            padding: 4px 16px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            z-index: 15;
+        }
+        .help-text {
+            color: #57606a;
+        }
+        input[type="file"] { display: none; }
+    </style>
 </head>
 <body>
-    <canvas id="matrix"></canvas>
-
-    <!-- TELA DE LOGIN -->
-    <div id="login-container" class="glass-box">
-        <h1 class="glow-text">SYSTEM_ACCESS</h1>
-        <p>IDENTIFIQUE-SE PARA INFILTRAR:</p>
-        <input type="text" id="username" placeholder="Codename..." autocomplete="off">
-        <button onclick="startChat()" class="btn-glow">CONECTAR</button>
-    </div>
-
-    <!-- TELA DO CHAT -->
-    <div id="chat-container" class="glass-box hidden">
-        <div id="chat-header">
-            <div class="status-info">
-                <span class="status-dot"></span>
-                <span id="user-display">ONLINE</span>
+    <header>
+        <h1>🏠 Planner Casa</h1>
+        <div class="toolbar">
+            <button class="tool-btn active" data-tool="select" title="Selecionar e mover objetos (V)">🖱️ Selecionar</button>
+            <button class="tool-btn" data-tool="wall" title="Desenhar paredes (W)">🧱 Parede</button>
+            <button class="tool-btn" data-tool="door" title="Inserir porta na parede (D)">🚪 Porta</button>
+            <button class="tool-btn" data-tool="window" title="Inserir janela na parede (J)">🪟 Janela</button>
+            <div style="position:relative; display:inline-block;">
+                <button class="tool-btn" data-tool="furniture" id="furnitureBtn" title="Inserir móveis (F)">🛋️ Móveis</button>
+                <div class="furniture-submenu" id="furnitureSubmenu"></div>
             </div>
-            <button onclick="location.reload()" class="btn-exit">SAIR</button>
+            <button class="tool-btn" data-tool="measure" title="Medir distância (M)">📏 Medir</button>
+            <span class="separator"></span>
+            <button class="tool-btn" id="btnUndo" title="Desfazer (Ctrl+Z)">↩️ Desfazer</button>
+            <button class="tool-btn" id="btnRedo" title="Refazer (Ctrl+Y)">↪️ Refazer</button>
+            <span class="separator"></span>
+            <button class="tool-btn" id="btnSave" title="Salvar projeto (Ctrl+S)">💾 Salvar</button>
+            <button class="tool-btn" id="btnLoad" title="Carregar projeto">📂 Abrir</button>
+            <button class="tool-btn" id="btnExport" title="Exportar JSON">📤 Exportar</button>
+            <button class="tool-btn" id="btnImport" title="Importar JSON">📥 Importar</button>
+            <span class="separator"></span>
+            <button class="tool-btn danger" id="btnClear" title="Limpar tudo">🗑️ Limpar</button>
         </div>
-        <div id="messages"></div>
-        <div class="input-group">
-            <input type="text" id="message-input" placeholder="Digite uma mensagem...">
-            <button onclick="enviar()" class="btn-send">SEND</button>
+    </header>
+    <main>
+        <canvas id="canvas"></canvas>
+        <div class="properties-panel" id="propertiesPanel">
+            <h3>Propriedades</h3>
+            <div id="propertiesContent"></div>
+            <button class="btn-small btn-danger" id="btnDeleteSelected" style="margin-top:8px; width:100%;">Excluir Objeto</button>
         </div>
-    </div>
+        <div class="status-bar">
+            <span id="statusInfo">Pronto</span>
+            <span class="help-text">Escala: <span id="scaleInfo">1m = 100px</span> | Zoom: <span id="zoomInfo">100%</span> | Pos: <span id="posInfo">0,0</span></span>
+        </div>
+        <input type="file" id="fileInput" accept=".json">
+    </main>
 
-    <!-- BIBLIOTECA SUPABASE (Sempre antes do seu script.js) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- SEU SCRIPT DE LÓGICA -->
-    <script src="script.js"></script>
+    <script>
+        (function() {
+            // ==================== CONFIGURAÇÃO ====================
+            const PIXELS_PER_METER = 100; // escala inicial
+            const GRID_SIZE = 1; // 1 metro
+            const SNAP_DISTANCE = 10; // pixels para snapping
+            const WALL_THICKNESS_DEFAULT = 0.15; // metros
+            const DOOR_WIDTH_DEFAULT = 0.9;
+            const WINDOW_WIDTH_DEFAULT = 1.2;
+
+            // ==================== ESTADO GLOBAL ====================
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const propertiesPanel = document.getElementById('propertiesPanel');
+            const propertiesContent = document.getElementById('propertiesContent');
+            const statusInfo = document.getElementById('statusInfo');
+            const scaleInfo = document.getElementById('scaleInfo');
+            const zoomInfo = document.getElementById('zoomInfo');
+            const posInfo = document.getElementById('posInfo');
+            const furnitureSubmenu = document.getElementById('furnitureSubmenu');
+
+            let tool = 'select'; // select, wall, door, window, furniture, measure
+            let selectedObject = null; // referência ao objeto selecionado
+            let selectedWallEndpoint = null; // para mover endpoints de parede
+            let selectedDoorWindow = null; // referência ao objeto porta/janela selecionado
+            let selectedFurnitureHandle = null; // 'move', 'resize', 'rotate', null
+
+            // Câmera
+            let camera = {
+                offsetX: 0,
+                offsetY: 0,
+                scale: PIXELS_PER_METER, // pixels por metro
+                minScale: 20,
+                maxScale: 1000
+            };
+
+            // Arrays de objetos
+            let walls = [];
+            let doors = [];
+            let windows = [];
+            let furnitures = [];
+            let dimensions = []; // para medidas temporárias
+
+            // Histórico para desfazer/refazer
+            let history = [];
+            let historyIndex = -1;
+
+            // Estado de desenho
+            let drawingWall = false;
+            let wallStartPoint = null;
+            let wallCurrentPoint = null;
+            let wallChain = []; // pontos para paredes contínuas
+            let measuring = false;
+            let measureStartPoint = null;
+            let measureCurrentPoint = null;
+            let currentFurnitureType = null;
+            let placingFurniture = false;
+            let furniturePlaceStart = null;
+
+            // Arrasto
+            let isDragging = false;
+            let dragStartMouse = null;
+            let dragStartObjectState = null;
+            let dragStartCamera = null;
+
+            // ==================== CLASSES DE OBJETOS ====================
+            class Wall {
+                constructor(x1, y1, x2, y2, thickness = WALL_THICKNESS_DEFAULT) {
+                    this.id = generateId();
+                    this.x1 = x1;
+                    this.y1 = y1;
+                    this.x2 = x2;
+                    this.y2 = y2;
+                    this.thickness = thickness;
+                    this.type = 'wall';
+                }
+                get length() {
+                    return Math.sqrt((this.x2 - this.x1) ** 2 + (this.y2 - this.y1) ** 2);
+                }
+                get angle() {
+                    return Math.atan2(this.y2 - this.y1, this.x2 - this.x1);
+                }
+                get center() {
+                    return { x: (this.x1 + this.x2) / 2, y: (this.y1 + this.y2) / 2 };
+                }
+                draw(ctx, screen) {
+                    const p1 = screen.worldToScreen(this.x1, this.y1);
+                    const p2 = screen.worldToScreen(this.x2, this.y2);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.lineWidth = this.thickness * screen.scale;
+                    ctx.lineCap = 'round';
+                    ctx.strokeStyle = '#333';
+                    ctx.stroke();
+                    // linha central fina
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = '#999';
+                    ctx.setLineDash([4, 4]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    // pontos de extremidade
+                    if (selectedObject === this) {
+                        drawHandle(ctx, p1, 'endpoint');
+                        drawHandle(ctx, p2, 'endpoint');
+                    }
+                }
+                hitTest(worldPoint, tolerancePixels) {
+                    const toleranceWorld = tolerancePixels / camera.scale;
+                    const dist = distancePointToSegment(worldPoint, {x:this.x1,y:this.y1}, {x:this.x2,y:this.y2});
+                    return dist <= this.thickness/2 + toleranceWorld;
+                }
+            }
+
+            class Door {
+                constructor(wallIndex, offset, width = DOOR_WIDTH_DEFAULT, swing = 'right') {
+                    this.id = generateId();
+                    this.wallIndex = wallIndex;
+                    this.offset = offset; // distância do início da parede até o centro da porta
+                    this.width = width;
+                    this.swing = swing; // 'left', 'right'
+                    this.type = 'door';
+                }
+                getWall(wallsArray) { return wallsArray[this.wallIndex]; }
+                getPosition(wallsArray) {
+                    const wall = this.getWall(wallsArray);
+                    if (!wall) return null;
+                    const angle = wall.angle;
+                    const cx = wall.x1 + Math.cos(angle) * this.offset;
+                    const cy = wall.y1 + Math.sin(angle) * this.offset;
+                    return { x: cx, y: cy, angle: angle };
+                }
+                draw(ctx, screen, wallsArray) {
+                    const wall = this.getWall(wallsArray);
+                    if (!wall) return;
+                    const pos = this.getPosition(wallsArray);
+                    const screenPos = screen.worldToScreen(pos.x, pos.y);
+                    const halfW = this.width / 2;
+                    const angle = pos.angle;
+                    const perpAngle = angle + Math.PI/2;
+                    // abertura na parede (vão)
+                    const p1 = {
+                        x: pos.x - Math.cos(angle) * halfW,
+                        y: pos.y - Math.sin(angle) * halfW
+                    };
+                    const p2 = {
+                        x: pos.x + Math.cos(angle) * halfW,
+                        y: pos.y + Math.sin(angle) * halfW
+                    };
+                    // desenhar vão como linhas brancas
+                    ctx.save();
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = wall.thickness * screen.scale + 2;
+                    ctx.beginPath();
+                    ctx.moveTo(screen.worldToScreen(p1.x, p1.y).x, screen.worldToScreen(p1.x, p1.y).y);
+                    ctx.lineTo(screen.worldToScreen(p2.x, p2.y).x, screen.worldToScreen(p2.x, p2.y).y);
+                    ctx.stroke();
+                    ctx.restore();
+                    // folha da porta (linha)
+                    const leafLength = this.width;
+                    const leafAngle = this.swing === 'right' ? angle + Math.PI/2 : angle - Math.PI/2;
+                    const leafEnd = {
+                        x: pos.x + Math.cos(leafAngle) * leafLength,
+                        y: pos.y + Math.sin(leafAngle) * leafLength
+                    };
+                    ctx.beginPath();
+                    ctx.moveTo(screenPos.x, screenPos.y);
+                    ctx.lineTo(screen.worldToScreen(leafEnd.x, leafEnd.y).x, screen.worldToScreen(leafEnd.x, leafEnd.y).y);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#e67e22';
+                    ctx.stroke();
+                    // arco
+                    ctx.beginPath();
+                    ctx.arc(screenPos.x, screenPos.y, leafLength * screen.scale, 
+                        this.swing === 'right' ? angle : angle - Math.PI/2, 
+                        this.swing === 'right' ? angle + Math.PI/2 : angle + Math.PI/2);
+                    ctx.strokeStyle = '#e67e22';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([3,3]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    // alça se selecionado
+                    if (selectedObject === this) {
+                        drawHandle(ctx, screenPos, 'move');
+                    }
+                }
+                hitTest(worldPoint, tolerancePixels, wallsArray) {
+                    const wall = this.getWall(wallsArray);
+                    if (!wall) return false;
+                    const pos = this.getPosition(wallsArray);
+                    const toleranceWorld = tolerancePixels / camera.scale;
+                    const distToCenter = distance(pos, worldPoint);
+                    const distToWallLine = distancePointToSegment(worldPoint, 
+                        {x: wall.x1, y: wall.y1}, {x: wall.x2, y: wall.y2});
+                    return distToCenter <= this.width/2 + toleranceWorld && 
+                           distToWallLine <= wall.thickness/2 + toleranceWorld;
+                }
+            }
+
+            class Window {
+                constructor(wallIndex, offset, width = WINDOW_WIDTH_DEFAULT) {
+                    this.id = generateId();
+                    this.wallIndex = wallIndex;
+                    this.offset = offset;
+                    this.width = width;
+                    this.type = 'window';
+                }
+                getWall(wallsArray) { return wallsArray[this.wallIndex]; }
+                getPosition(wallsArray) {
+                    const wall = this.getWall(wallsArray);
+                    if (!wall) return null;
+                    const angle = wall.angle;
+                    const cx = wall.x1 + Math.cos(angle) * this.offset;
+                    const cy = wall.y1 + Math.sin(angle) * this.offset;
+                    return { x: cx, y: cy, angle: angle };
+                }
+                draw(ctx, screen, wallsArray) {
+                    const wall = this.getWall(wallsArray);
+                    if (!wall) return;
+                    const pos = this.getPosition(wallsArray);
+                    const screenPos = screen.worldToScreen(pos.x, pos.y);
+                    const halfW = this.width / 2;
+                    const angle = pos.angle;
+                    const perpAngle = angle + Math.PI/2;
+                    // desenhar linhas paralelas
+                    const offsetDist = wall.thickness / 2 + 0.03;
+                    for (let side = -1; side <= 1; side += 2) {
+                        const p1 = {
+                            x: pos.x - Math.cos(angle) * halfW + Math.cos(perpAngle) * offsetDist * side,
+                            y: pos.y - Math.sin(angle) * halfW + Math.sin(perpAngle) * offsetDist * side
+                        };
+                        const p2 = {
+                            x: pos.x + Math.cos(angle) * halfW + Math.cos(perpAngle) * offsetDist * side,
+                            y: pos.y + Math.sin(angle) * halfW + Math.sin(perpAngle) * offsetDist * side
+                        };
+                        ctx.beginPath();
+                        ctx.moveTo(screen.worldToScreen(p1.x, p1.y).x, screen.worldToScreen(p1.x, p1.y).y);
+                        ctx.lineTo(screen.worldToScreen(p2.x, p2.y).x, screen.worldToScreen(p2.x, p2.y).y);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#3498db';
+                        ctx.stroke();
+                    }
+                    // linhas de conexão
+                    const p1 = {
+                        x: pos.x - Math.cos(angle) * halfW,
+                        y: pos.y - Math.sin(angle) * halfW
+                    };
+                    const p2 = {
+                        x: pos.x + Math.cos(angle) * halfW,
+                        y: pos.y + Math.sin(angle) * halfW
+                    };
+                    const p1s = screen.worldToScreen(p1.x, p1.y);
+                    const p2s = screen.worldToScreen(p2.x, p2.y);
+                    for (let side = -1; side <= 1; side += 2) {
+                        const off = (wall.thickness / 2 + 0.03) * side;
+                        const p1o = screen.worldToScreen(p1.x + Math.cos(perpAngle)*off, p1.y + Math.sin(perpAngle)*off);
+                        const p2o = screen.worldToScreen(p2.x + Math.cos(perpAngle)*off, p2.y + Math.sin(perpAngle)*off);
+                        ctx.beginPath();
+                        ctx.moveTo(p1s.x, p1s.y);
+                        ctx.lineTo(p1o.x, p1o.y);
+                        ctx.strokeStyle = '#3498db';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(p2s.x, p2s.y);
+                        ctx.lineTo(p2o.x, p2o.y);
+                        ctx.stroke();
+                    }
+                    if (selectedObject === this) {
+                        drawHandle(ctx, screenPos, 'move');
+                    }
+                }
+                hitTest(worldPoint, tolerancePixels, wallsArray) {
+                    const wall = this.getWall(wallsArray);
+                    if (!wall) return false;
+                    const pos = this.getPosition(wallsArray);
+                    const toleranceWorld = tolerancePixels / camera.scale;
+                    const distToCenter = distance(pos, worldPoint);
+                    const distToWallLine = distancePointToSegment(worldPoint, 
+                        {x: wall.x1, y: wall.y1}, {x: wall.x2, y: wall.y2});
+                    return distToCenter <= this.width/2 + toleranceWorld && 
+                           distToWallLine <= wall.thickness/2 + toleranceWorld;
+                }
+            }
+
+            class Furniture {
+                constructor(x, y, width, height, rotation, type, label) {
+                    this.id = generateId();
+                    this.x = x;
+                    this.y = y;
+                    this.width = width;
+                    this.height = height;
+                    this.rotation = rotation || 0;
+                    this.type = type || 'generic';
+                    this.label = label || '';
+                    this.color = getFurnitureColor(type);
+                }
+                get corners() {
+                    const rad = this.rotation;
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+                    const hw = this.width / 2;
+                    const hh = this.height / 2;
+                    return [
+                        { x: this.x - hw * cos + hh * sin, y: this.y - hw * sin - hh * cos },
+                        { x: this.x + hw * cos + hh * sin, y: this.y + hw * sin - hh * cos },
+                        { x: this.x + hw * cos - hh * sin, y: this.y + hw * sin + hh * cos },
+                        { x: this.x - hw * cos - hh * sin, y: this.y - hw * sin + hh * cos }
+                    ];
+                }
+                draw(ctx, screen) {
+                    const rad = this.rotation;
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+                    const hw = this.width / 2;
+                    const hh = this.height / 2;
+                    const corners = this.corners.map(c => screen.worldToScreen(c.x, c.y));
+                    ctx.beginPath();
+                    ctx.moveTo(corners[0].x, corners[0].y);
+                    ctx.lineTo(corners[1].x, corners[1].y);
+                    ctx.lineTo(corners[2].x, corners[2].y);
+                    ctx.lineTo(corners[3].x, corners[3].y);
+                    ctx.closePath();
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    ctx.strokeStyle = '#555';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    // rótulo
+                    if (this.label) {
+                        const centerScreen = screen.worldToScreen(this.x, this.y);
+                        ctx.fillStyle = '#333';
+                        ctx.font = '12px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(this.label, centerScreen.x, centerScreen.y);
+                    }
+                    // alças se selecionado
+                    if (selectedObject === this) {
+                        // alças de redimensionar (cantos)
+                        for (let i = 0; i < 4; i++) {
+                            drawHandle(ctx, corners[i], 'resize');
+                        }
+                        // alça de mover (centro)
+                        drawHandle(ctx, screen.worldToScreen(this.x, this.y), 'move');
+                        // alça de rotação (acima)
+                        const rotPoint = {
+                            x: this.x + Math.cos(rad - Math.PI/2) * (hh + 0.3),
+                            y: this.y + Math.sin(rad - Math.PI/2) * (hh + 0.3)
+                        };
+                        drawHandle(ctx, screen.worldToScreen(rotPoint.x, rotPoint.y), 'rotate');
+                    }
+                }
+                hitTest(worldPoint, tolerancePixels) {
+                    const rad = this.rotation;
+                    const cos = Math.cos(-rad);
+                    const sin = Math.sin(-rad);
+                    const dx = worldPoint.x - this.x;
+                    const dy = worldPoint.y - this.y;
+                    const localX = dx * cos - dy * sin;
+                    const localY = dx * sin + dy * cos;
+                    const toleranceWorld = tolerancePixels / camera.scale;
+                    return Math.abs(localX) <= this.width/2 + toleranceWorld && 
+                           Math.abs(localY) <= this.height/2 + toleranceWorld;
+                }
+                getHandleAt(worldPoint, tolerancePixels) {
+                    const toleranceWorld = tolerancePixels / camera.scale;
+                    const rad = this.rotation;
+                    const corners = this.corners;
+                    for (let i = 0; i < corners.length; i++) {
+                        if (distance(corners[i], worldPoint) <= toleranceWorld) return { type: 'resize', index: i };
+                    }
+                    if (distance({x:this.x, y:this.y}, worldPoint) <= toleranceWorld) return { type: 'move' };
+                    const rotPoint = {
+                        x: this.x + Math.cos(rad - Math.PI/2) * (this.height/2 + 0.3),
+                        y: this.y + Math.sin(rad - Math.PI/2) * (this.height/2 + 0.3)
+                    };
+                    if (distance(rotPoint, worldPoint) <= toleranceWorld) return { type: 'rotate' };
+                    return null;
+                }
+            }
+
+            // ==================== FUNÇÕES AUXILIARES ====================
+            function generateId() {
+                return '_' + Math.random().toString(36).substr(2, 9);
+            }
+            function distance(p1, p2) {
+                return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+            }
+            function distancePointToSegment(point, segA, segB) {
+                const dx = segB.x - segA.x;
+                const dy = segB.y - segA.y;
+                const lengthSq = dx*dx + dy*dy;
+                if (lengthSq === 0) return distance(point, segA);
+                let t = ((point.x - segA.x) * dx + (point.y - segA.y) * dy) / lengthSq;
+                t = Math.max(0, Math.min(1, t));
+                const projX = segA.x + t * dx;
+                const projY = segA.y + t * dy;
+                return distance(point, {x: projX, y: projY});
+            }
+            function drawHandle(ctx, screenPos, type) {
+                const size = 8;
+                ctx.beginPath();
+                ctx.rect(screenPos.x - size/2, screenPos.y - size/2, size, size);
+                ctx.fillStyle = type === 'endpoint' ? '#ff4444' : 
+                                type === 'move' ? '#0969da' : 
+                                type === 'resize' ? '#28a745' : '#f66a0a';
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+            function getFurnitureColor(type) {
+                const colors = {
+                    'sofa': '#8e6e53',
+                    'bed': '#5d8aa8',
+                    'table': '#a0522d',
+                    'chair': '#6b8e23',
+                    'cabinet': '#8b7355',
+                    'fridge': '#b0c4de',
+                    'stove': '#696969',
+                    'sink': '#b0c4de',
+                    'toilet': '#d3d3d3',
+                    'shower': '#87ceeb',
+                    'generic': '#cccccc'
+                };
+                return colors[type] || '#cccccc';
+            }
+            function getFurnitureLabel(type) {
+                const labels = {
+                    'sofa': 'Sofá',
+                    'bed': 'Cama',
+                    'table': 'Mesa',
+                    'chair': 'Cadeira',
+                    'cabinet': 'Armário',
+                    'fridge': 'Geladeira',
+                    'stove': 'Fogão',
+                    'sink': 'Pia',
+                    'toilet': 'Vaso',
+                    'shower': 'Chuveiro',
+                    'generic': 'Móvel'
+                };
+                return labels[type] || 'Móvel';
+            }
+
+            // ==================== TRANSFORMAÇÕES DE TELA ====================
+            const screen = {
+                worldToScreen(wx, wy) {
+                    return {
+                        x: wx * camera.scale + camera.offsetX,
+                        y: wy * camera.scale + camera.offsetY
+                    };
+                },
+                screenToWorld(sx, sy) {
+                    return {
+                        x: (sx - camera.offsetX) / camera.scale,
+                        y: (sy - camera.offsetY) / camera.scale
+                    };
+                }
+            };
+
+            // ==================== HISTÓRICO ====================
+            function saveState() {
+                const state = JSON.stringify({
+                    walls, doors, windows, furnitures, camera
+                });
+                history = history.slice(0, historyIndex + 1);
+                history.push(state);
+                if (history.length > 100) history.shift();
+                historyIndex = history.length - 1;
+            }
+            function undo() {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    loadState(JSON.parse(history[historyIndex]));
+                }
+            }
+            function redo() {
+                if (historyIndex < history.length - 1) {
+                    historyIndex++;
+                    loadState(JSON.parse(history[historyIndex]));
+                }
+            }
+            function loadState(state) {
+                walls = state.walls.map(w => Object.assign(new Wall(), w));
+                doors = state.doors.map(d => Object.assign(new Door(), d));
+                windows = state.windows.map(w => Object.assign(new Window(), w));
+                furnitures = state.furnitures.map(f => Object.assign(new Furniture(), f));
+                camera = state.camera;
+                selectedObject = null;
+                clearSelection();
+                render();
+            }
+            function clearSelection() {
+                selectedObject = null;
+                selectedWallEndpoint = null;
+                selectedDoorWindow = null;
+                selectedFurnitureHandle = null;
+                propertiesPanel.classList.remove('show');
+            }
+
+            // ==================== RENDERIZAÇÃO ====================
+            function render() {
+                const w = canvas.width = canvas.clientWidth;
+                const h = canvas.height = canvas.clientHeight;
+                ctx.clearRect(0, 0, w, h);
+
+                // desenhar grid
+                drawGrid();
+
+                // desenhar paredes
+                for (const wall of walls) wall.draw(ctx, screen);
+                // desenhar janelas
+                for (const win of windows) win.draw(ctx, screen, walls);
+                // desenhar portas
+                for (const door of doors) door.draw(ctx, screen, walls);
+                // desenhar móveis
+                for (const furn of furnitures) furn.draw(ctx, screen);
+
+                // desenhar preview de parede
+                if (drawingWall && wallStartPoint && wallCurrentPoint) {
+                    const p1 = screen.worldToScreen(wallStartPoint.x, wallStartPoint.y);
+                    const p2 = screen.worldToScreen(wallCurrentPoint.x, wallCurrentPoint.y);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.lineWidth = WALL_THICKNESS_DEFAULT * camera.scale;
+                    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+                    ctx.setLineDash([6,4]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    // medida
+                    const dist = distance(wallStartPoint, wallCurrentPoint);
+                    const mid = {x:(wallStartPoint.x+wallCurrentPoint.x)/2, y:(wallStartPoint.y+wallCurrentPoint.y)/2};
+                    const midScreen = screen.worldToScreen(mid.x, mid.y);
+                    ctx.fillStyle = '#0969da';
+                    ctx.font = '12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(dist.toFixed(2) + 'm', midScreen.x, midScreen.y - 10);
+                }
+
+                // desenhar medição temporária
+                if (measuring && measureStartPoint && measureCurrentPoint) {
+                    const p1 = screen.worldToScreen(measureStartPoint.x, measureStartPoint.y);
+                    const p2 = screen.worldToScreen(measureCurrentPoint.x, measureCurrentPoint.y);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.strokeStyle = '#f66a0a';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([5,3]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    const dist = distance(measureStartPoint, measureCurrentPoint);
+                    const mid = {x:(measureStartPoint.x+measureCurrentPoint.x)/2, y:(measureStartPoint.y+measureCurrentPoint.y)/2};
+                    const midScreen = screen.worldToScreen(mid.x, mid.y);
+                    ctx.fillStyle = '#f66a0a';
+                    ctx.font = 'bold 14px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(dist.toFixed(2) + 'm', midScreen.x, midScreen.y - 10);
+                }
+
+                // desenhar preview de móvel
+                if (placingFurniture && furniturePlaceStart && currentFurnitureType) {
+                    const mouseWorld = screen.screenToWorld(mouseX, mouseY);
+                    const w = Math.abs(mouseWorld.x - furniturePlaceStart.x);
+                    const h = Math.abs(mouseWorld.y - furniturePlaceStart.y);
+                    const cx = (mouseWorld.x + furniturePlaceStart.x) / 2;
+                    const cy = (mouseWorld.y + furniturePlaceStart.y) / 2;
+                    const tempFurn = new Furniture(cx, cy, w || 0.1, h || 0.1, 0, currentFurnitureType, getFurnitureLabel(currentFurnitureType));
+                    tempFurn.draw(ctx, screen);
+                }
+
+                // atualizar info
+                updateStatusBar();
+            }
+
+            function drawGrid() {
+                const w = canvas.width;
+                const h = canvas.height;
+                const step = GRID_SIZE * camera.scale;
+                if (step < 10) return;
+                const startX = camera.offsetX % step;
+                const startY = camera.offsetY % step;
+                ctx.beginPath();
+                ctx.strokeStyle = '#e0e0e0';
+                ctx.lineWidth = 0.5;
+                for (let x = startX; x < w; x += step) {
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, h);
+                }
+                for (let y = startY; y < h; y += step) {
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(w, y);
+                }
+                ctx.stroke();
+                // linha do eixo
+                const origin = screen.worldToScreen(0, 0);
+                ctx.beginPath();
+                ctx.strokeStyle = '#ffcccc';
+                ctx.lineWidth = 1;
+                if (origin.x >= 0 && origin.x <= w) {
+                    ctx.moveTo(origin.x, 0);
+                    ctx.lineTo(origin.x, h);
+                }
+                if (origin.y >= 0 && origin.y <= h) {
+                    ctx.moveTo(0, origin.y);
+                    ctx.lineTo(w, origin.y);
+                }
+                ctx.stroke();
+            }
+
+            function updateStatusBar() {
+                const mouseWorld = screen.screenToWorld(mouseX, mouseY);
+                posInfo.textContent = mouseWorld.x.toFixed(2) + ',' + mouseWorld.y.toFixed(2);
+                zoomInfo.textContent = Math.round(camera.scale / PIXELS_PER_METER * 100) + '%';
+                scaleInfo.textContent = '1m = ' + camera.scale.toFixed(0) + 'px';
+            }
+
+            // ==================== SELEÇÃO ====================
+            function findObjectAt(worldPoint) {
+                const tolerancePixels = 10;
+                // verificar móveis primeiro (mais específicos)
+                for (let i = furnitures.length - 1; i >= 0; i--) {
+                    if (furnitures[i].hitTest(worldPoint, tolerancePixels)) return furnitures[i];
+                }
+                // portas
+                for (let i = doors.length - 1; i >= 0; i--) {
+                    if (doors[i].hitTest(worldPoint, tolerancePixels, walls)) return doors[i];
+                }
+                // janelas
+                for (let i = windows.length - 1; i >= 0; i--) {
+                    if (windows[i].hitTest(worldPoint, tolerancePixels, walls)) return windows[i];
+                }
+                // paredes
+                for (let i = walls.length - 1; i >= 0; i--) {
+                    if (walls[i].hitTest(worldPoint, tolerancePixels)) return walls[i];
+                }
+                return null;
+            }
+
+            function selectObject(obj) {
+                selectedObject = obj;
+                selectedWallEndpoint = null;
+                selectedDoorWindow = null;
+                selectedFurnitureHandle = null;
+                if (obj) {
+                    propertiesPanel.classList.add('show');
+                    updatePropertiesPanel();
+                } else {
+                    propertiesPanel.classList.remove('show');
+                    propertiesContent.innerHTML = '';
+                }
+                render();
+            }
+
+            function updatePropertiesPanel() {
+                if (!selectedObject) {
+                    propertiesContent.innerHTML = '';
+                    return;
+                }
+                let html = '';
+                if (selectedObject.type === 'wall') {
+                    const wall = selectedObject;
+                    html = `
+                        <div class="prop-row"><label>P1 X</label><input type="number" step="0.01" id="prop_x1" value="${wall.x1.toFixed(2)}" onchange="updateWallProp('x1', this.value)"></div>
+                        <div class="prop-row"><label>P1 Y</label><input type="number" step="0.01" id="prop_y1" value="${wall.y1.toFixed(2)}" onchange="updateWallProp('y1', this.value)"></div>
+                        <div class="prop-row"><label>P2 X</label><input type="number" step="0.01" id="prop_x2" value="${wall.x2.toFixed(2)}" onchange="updateWallProp('x2', this.value)"></div>
+                        <div class="prop-row"><label>P2 Y</label><input type="number" step="0.01" id="prop_y2" value="${wall.y2.toFixed(2)}" onchange="updateWallProp('y2', this.value)"></div>
+                        <div class="prop-row"><label>Espessura</label><input type="number" step="0.01" id="prop_thickness" value="${wall.thickness.toFixed(2)}" onchange="updateWallProp('thickness', this.value)"></div>
+                        <div class="prop-row"><label>Comprimento</label><span>${wall.length.toFixed(2)} m</span></div>
+                    `;
+                } else if (selectedObject.type === 'door') {
+                    const door = selectedObject;
+                    html = `
+                        <div class="prop-row"><label>Offset</label><input type="number" step="0.01" id="prop_offset" value="${door.offset.toFixed(2)}" onchange="updateDoorWindowProp('offset', this.value)"></div>
+                        <div class="prop-row"><label>Largura</label><input type="number" step="0.01" id="prop_width" value="${door.width.toFixed(2)}" onchange="updateDoorWindowProp('width', this.value)"></div>
+                        <div class="prop-row"><label>Abertura</label>
+                            <select id="prop_swing" onchange="updateDoorWindowProp('swing', this.value)">
+                                <option value="right" ${door.swing==='right'?'selected':''}>Direita</option>
+                                <option value="left" ${door.swing==='left'?'selected':''}>Esquerda</option>
+                            </select>
+                        </div>
+                    `;
+                } else if (selectedObject.type === 'window') {
+                    const win = selectedObject;
+                    html = `
+                        <div class="prop-row"><label>Offset</label><input type="number" step="0.01" id="prop_offset" value="${win.offset.toFixed(2)}" onchange="updateDoorWindowProp('offset', this.value)"></div>
+                        <div class="prop-row"><label>Largura</label><input type="number" step="0.01" id="prop_width" value="${win.width.toFixed(2)}" onchange="updateDoorWindowProp('width', this.value)"></div>
+                    `;
+                } else if (selectedObject.type === 'furniture' || selectedObject.type === undefined || selectedObject instanceof Furniture) {
+                    const furn = selectedObject;
+                    html = `
+                        <div class="prop-row"><label>Pos X</label><input type="number" step="0.01" id="prop_x" value="${furn.x.toFixed(2)}" onchange="updateFurnitureProp('x', this.value)"></div>
+                        <div class="prop-row"><label>Pos Y</label><input type="number" step="0.01" id="prop_y" value="${furn.y.toFixed(2)}" onchange="updateFurnitureProp('y', this.value)"></div>
+                        <div class="prop-row"><label>Largura</label><input type="number" step="0.01" id="prop_width" value="${furn.width.toFixed(2)}" onchange="updateFurnitureProp('width', this.value)"></div>
+                        <div class="prop-row"><label>Altura</label><input type="number" step="0.01" id="prop_height" value="${furn.height.toFixed(2)}" onchange="updateFurnitureProp('height', this.value)"></div>
+                        <div class="prop-row"><label>Rotação</label><input type="number" step="5" id="prop_rotation" value="${(furn.rotation * 180 / Math.PI).toFixed(1)}" onchange="updateFurnitureProp('rotation', this.value)"></div>
+                        <div class="prop-row"><label>Rótulo</label><input type="text" id="prop_label" value="${furn.label}" onchange="updateFurnitureProp('label', this.value)"></div>
+                    `;
+                }
+                propertiesContent.innerHTML = html;
+            }
+
+            // funções globais para atualização via inputs
+            window.updateWallProp = function(prop, value) {
+                if (!selectedObject || selectedObject.type !== 'wall') return;
+                const wall = selectedObject;
+                const num = parseFloat(value);
+                if (isNaN(num)) return;
+                wall[prop] = num;
+                saveState();
+                render();
+            };
+            window.updateDoorWindowProp = function(prop, value) {
+                if (!selectedObject || (selectedObject.type !== 'door' && selectedObject.type !== 'window')) return;
+                const obj = selectedObject;
+                if (prop === 'swing') {
+                    obj.swing = value;
+                } else {
+                    const num = parseFloat(value);
+                    if (isNaN(num)) return;
+                    obj[prop] = num;
+                }
+                saveState();
+                render();
+            };
+            window.updateFurnitureProp = function(prop, value) {
+                if (!selectedObject || !(selectedObject instanceof Furniture)) return;
+                const furn = selectedObject;
+                if (prop === 'rotation') {
+                    furn.rotation = parseFloat(value) * Math.PI / 180;
+                } else if (prop === 'label') {
+                    furn.label = value;
+                } else {
+                    const num = parseFloat(value);
+                    if (isNaN(num)) return;
+                    furn[prop] = num;
+                }
+                saveState();
+                render();
+            };
+
+            // ==================== EVENTOS DE MOUSE ====================
+            let mouseX = 0, mouseY = 0;
+
+            canvas.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
+                const worldPoint = screen.screenToWorld(mouseX, mouseY);
+
+                // pan com botão do meio ou espaço
+                if (e.button === 1 || (e.button === 0 && keysPressed['Space'])) {
+                    startPan(e);
+                    return;
+                }
+
+                if (tool === 'wall') {
+                    handleWallClick(worldPoint);
+                } else if (tool === 'door' || tool === 'window') {
+                    handleDoorWindowClick(worldPoint);
+                } else if (tool === 'furniture') {
+                    handleFurnitureClick(worldPoint);
+                } else if (tool === 'measure') {
+                    handleMeasureClick(worldPoint);
+                } else if (tool === 'select') {
+                    handleSelectClick(worldPoint, e);
+                }
+                render();
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
+                const worldPoint = screen.screenToWorld(mouseX, mouseY);
+
+                if (isDragging) {
+                    handleDrag(worldPoint);
+                } else {
+                    // atualizar cursor
+                    updateCursor(worldPoint);
+                    // para preview
+                    if (drawingWall) {
+                        wallCurrentPoint = snapPoint(worldPoint);
+                    }
+                    if (measuring) {
+                        measureCurrentPoint = worldPoint;
+                    }
+                    if (placingFurniture) {
+                        // atualiza preview
+                    }
+                    render();
+                }
+            });
+
+            canvas.addEventListener('mouseup', (e) => {
+                if (isDragging) {
+                    endDrag();
+                }
+            });
+
+            canvas.addEventListener('dblclick', (e) => {
+                if (drawingWall && tool === 'wall') {
+                    finishWallChain();
+                }
+            });
+
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top;
+                const worldBefore = screen.screenToWorld(mx, my);
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                camera.scale = Math.max(camera.minScale, Math.min(camera.maxScale, camera.scale * delta));
+                // ajustar offset para manter o ponto sob o mouse
+                camera.offsetX = mx - worldBefore.x * camera.scale;
+                camera.offsetY = my - worldBefore.y * camera.scale;
+                render();
+            });
+
+            // Eventos de teclado
+            const keysPressed = {};
+            window.addEventListener('keydown', (e) => {
+                keysPressed[e.key] = true;
+                if (e.key === 'Escape') {
+                    if (drawingWall) {
+                        drawingWall = false;
+                        wallStartPoint = null;
+                        wallChain = [];
+                        render();
+                    }
+                    if (measuring) {
+                        measuring = false;
+                        render();
+                    }
+                    if (placingFurniture) {
+                        placingFurniture = false;
+                        render();
+                    }
+                    clearSelection();
+                }
+                if (e.key === 'Delete' && selectedObject) {
+                    deleteSelectedObject();
+                }
+                if (e.ctrlKey && e.key === 'z') {
+                    e.preventDefault();
+                    undo();
+                }
+                if (e.ctrlKey && e.key === 'y') {
+                    e.preventDefault();
+                    redo();
+                }
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    saveToLocalStorage();
+                }
+                if (e.key === 'v') setTool('select');
+                if (e.key === 'w') setTool('wall');
+                if (e.key === 'd') setTool('door');
+                if (e.key === 'j') setTool('window');
+                if (e.key === 'f') toggleFurnitureMenu();
+                if (e.key === 'm') setTool('measure');
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    canvas.style.cursor = 'grab';
+                }
+            });
+            window.addEventListener('keyup', (e) => {
+                keysPressed[e.key] = false;
+                if (e.key === ' ') canvas.style.cursor = 'crosshair';
+            });
+
+            // ==================== FUNÇÕES DE FERRAMENTAS ====================
+            function snapPoint(point) {
+                // snapping a grid e pontos existentes
+                let snapped = { ...point };
+                const snapTolerance = SNAP_DISTANCE / camera.scale;
+                // grid
+                const gridX = Math.round(point.x / GRID_SIZE) * GRID_SIZE;
+                const gridY = Math.round(point.y / GRID_SIZE) * GRID_SIZE;
+                if (Math.abs(gridX - point.x) < snapTolerance) snapped.x = gridX;
+                if (Math.abs(gridY - point.y) < snapTolerance) snapped.y = gridY;
+                // snap a endpoints de paredes
+                for (const wall of walls) {
+                    if (distance(point, {x:wall.x1,y:wall.y1}) < snapTolerance) {
+                        snapped.x = wall.x1; snapped.y = wall.y1;
+                        return snapped;
+                    }
+                    if (distance(point, {x:wall.x2,y:wall.y2}) < snapTolerance) {
+                        snapped.x = wall.x2; snapped.y = wall.y2;
+                        return snapped;
+                    }
+                    // snap ao longo da parede? não necessário
+                }
+                return snapped;
+            }
+
+            function handleWallClick(worldPoint) {
+                const snapped = snapPoint(worldPoint);
+                if (!drawingWall) {
+                    drawingWall = true;
+                    wallStartPoint = snapped;
+                    wallCurrentPoint = snapped;
+                    wallChain = [snapped];
+                } else {
+                    // adicionar segmento
+                    const lastPoint = wallChain[wallChain.length - 1];
+                    const newWall = new Wall(lastPoint.x, lastPoint.y, snapped.x, snapped.y);
+                    walls.push(newWall);
+                    wallChain.push(snapped);
+                    wallStartPoint = snapped;
+                    wallCurrentPoint = snapped;
+                    saveState();
+                }
+            }
+
+            function finishWallChain() {
+                if (wallChain.length > 0) {
+                    drawingWall = false;
+                    wallStartPoint = null;
+                    wallCurrentPoint = null;
+                    wallChain = [];
+                    render();
+                }
+            }
+
+            function handleDoorWindowClick(worldPoint) {
+                // encontrar parede clicada
+                const tolerance = 10 / camera.scale;
+                let bestWall = null;
+                let bestDist = Infinity;
+                let bestOffset = 0;
+                for (let i = 0; i < walls.length; i++) {
+                    const wall = walls[i];
+                    const dist = distancePointToSegment(worldPoint, {x:wall.x1,y:wall.y1}, {x:wall.x2,y:wall.y2});
+                    if (dist < tolerance && dist < bestDist) {
+                        bestDist = dist;
+                        bestWall = wall;
+                        // calcular offset
+                        const angle = wall.angle;
+                        const dx = worldPoint.x - wall.x1;
+                        const dy = worldPoint.y - wall.y1;
+                        const proj = dx * Math.cos(angle) + dy * Math.sin(angle);
+                        bestOffset = Math.max(0, Math.min(wall.length, proj));
+                    }
+                }
+                if (bestWall) {
+                    const wallIndex = walls.indexOf(bestWall);
+                    if (tool === 'door') {
+                        const newDoor = new Door(wallIndex, bestOffset);
+                        doors.push(newDoor);
+                        saveState();
+                    } else {
+                        const newWindow = new Window(wallIndex, bestOffset);
+                        windows.push(newWindow);
+                        saveState();
+                    }
+                    render();
+                }
+            }
+
+            function handleFurnitureClick(worldPoint) {
+                if (!currentFurnitureType) return;
+                if (!placingFurniture) {
+                    placingFurniture = true;
+                    furniturePlaceStart = worldPoint;
+                } else {
+                    // criar móvel com base no arrasto
+                    const w = Math.abs(worldPoint.x - furniturePlaceStart.x);
+                    const h = Math.abs(worldPoint.y - furniturePlaceStart.y);
+                    const cx = (worldPoint.x + furniturePlaceStart.x) / 2;
+                    const cy = (worldPoint.y + furniturePlaceStart.y) / 2;
+                    const furn = new Furniture(cx, cy, w || 0.5, h || 0.5, 0, currentFurnitureType, getFurnitureLabel(currentFurnitureType));
+                    furnitures.push(furn);
+                    placingFurniture = false;
+                    furniturePlaceStart = null;
+                    saveState();
+                    render();
+                }
+            }
+
+            function handleMeasureClick(worldPoint) {
+                if (!measuring) {
+                    measuring = true;
+                    measureStartPoint = worldPoint;
+                    measureCurrentPoint = worldPoint;
+                } else {
+                    measuring = false;
+                    // poderia criar uma dimensão permanente, mas simplificamos
+                    const dist = distance(measureStartPoint, worldPoint);
+                    statusInfo.textContent = `Medida: ${dist.toFixed(2)} m`;
+                    measureStartPoint = null;
+                    measureCurrentPoint = null;
+                    render();
+                }
+            }
+
+            function handleSelectClick(worldPoint, e) {
+                const obj = findObjectAt(worldPoint);
+                if (obj) {
+                    selectObject(obj);
+                    // verificar alças de móvel
+                    if (obj instanceof Furniture) {
+                        const handle = obj.getHandleAt(worldPoint, 10);
+                        if (handle) {
+                            selectedFurnitureHandle = handle;
+                            startDrag(worldPoint, obj);
+                        } else {
+                            // iniciar drag para mover
+                            selectedFurnitureHandle = { type: 'move' };
+                            startDrag(worldPoint, obj);
+                        }
+                    } else if (obj.type === 'wall') {
+                        // verificar se clicou perto de um endpoint
+                        const tolerance = 10 / camera.scale;
+                        const dist1 = distance(worldPoint, {x:obj.x1,y:obj.y1});
+                        const dist2 = distance(worldPoint, {x:obj.x2,y:obj.y2});
+                        if (dist1 < tolerance) {
+                            selectedWallEndpoint = 1;
+                            startDrag(worldPoint, obj);
+                        } else if (dist2 < tolerance) {
+                            selectedWallEndpoint = 2;
+                            startDrag(worldPoint, obj);
+                        } else {
+                            // mover parede inteira
+                            selectedWallEndpoint = 0;
+                            startDrag(worldPoint, obj);
+                        }
+                    } else if (obj.type === 'door' || obj.type === 'window') {
+                        // arrastar ao longo da parede
+                        selectedDoorWindow = obj;
+                        startDrag(worldPoint, obj);
+                    }
+                } else {
+                    clearSelection();
+                }
+            }
+
+            function startPan(e) {
+                isDragging = true;
+                dragStartMouse = { x: e.clientX, y: e.clientY };
+                dragStartCamera = { offsetX: camera.offsetX, offsetY: camera.offsetY };
+                canvas.style.cursor = 'grabbing';
+            }
+
+            function startDrag(worldPoint, obj) {
+                isDragging = true;
+                dragStartMouse = { x: mouseX, y: mouseY };
+                dragStartObjectState = {
+                    worldPoint: worldPoint,
+                    object: obj,
+                    // salvar estado relevante
+                    wall: obj.type === 'wall' ? {x1:obj.x1,y1:obj.y1,x2:obj.x2,y2:obj.y2} : null,
+                    doorWindow: (obj.type === 'door' || obj.type === 'window') ? {offset: obj.offset} : null,
+                    furniture: obj instanceof Furniture ? {x:obj.x, y:obj.y, width:obj.width, height:obj.height, rotation:obj.rotation} : null,
+                    endpoint: selectedWallEndpoint
+                };
+            }
+
+            function handleDrag(worldPoint) {
+                if (!isDragging) return;
+                if (dragStartObjectState) {
+                    const obj = dragStartObjectState.object;
+                    const startWorld = dragStartObjectState.worldPoint;
+                    if (obj instanceof Furniture) {
+                        const handle = selectedFurnitureHandle;
+                        if (handle && handle.type === 'move') {
+                            obj.x += worldPoint.x - startWorld.x;
+                            obj.y += worldPoint.y - startWorld.y;
+                        } else if (handle && handle.type === 'resize') {
+                            // redimensionar com base no canto arrastado
+                            const index = handle.index;
+                            const corners = obj.corners;
+                            const corner = corners[index];
+                            const opposite = corners[(index + 2) % 4];
+                            const dx = worldPoint.x - corner.x;
+                            const dy = worldPoint.y - corner.y;
+                            const newCorner = { x: worldPoint.x, y: worldPoint.y };
+                            const newCenter = {
+                                x: (newCorner.x + opposite.x) / 2,
+                                y: (newCorner.y + opposite.y) / 2
+                            };
+                            const rad = obj.rotation;
+                            const cos = Math.cos(rad);
+                            const sin = Math.sin(rad);
+                            const localDx = (worldPoint.x - obj.x) * cos + (worldPoint.y - obj.y) * sin;
+                            const localDy = -(worldPoint.x - obj.x) * sin + (worldPoint.y - obj.y) * cos;
+                            obj.width = Math.abs(localDx) * 2;
+                            obj.height = Math.abs(localDy) * 2;
+                            obj.x = newCenter.x;
+                            obj.y = newCenter.y;
+                            // corrigir rotação
+                            obj.rotation = rad;
+                        } else if (handle && handle.type === 'rotate') {
+                            const angle = Math.atan2(worldPoint.y - obj.y, worldPoint.x - obj.x) + Math.PI/2;
+                            obj.rotation = angle;
+                        }
+                    } else if (obj.type === 'wall' && selectedWallEndpoint !== null) {
+                        const snapped = snapPoint(worldPoint);
+                        if (selectedWallEndpoint === 1) {
+                            obj.x1 = snapped.x; obj.y1 = snapped.y;
+                            // atualizar portas/janelas referenciadas? offset pode mudar
+                        } else if (selectedWallEndpoint === 2) {
+                            obj.x2 = snapped.x; obj.y2 = snapped.y;
+                        } else if (selectedWallEndpoint === 0) {
+                            // mover parede inteira
+                            const dx = snapped.x - startWorld.x;
+                            const dy = snapped.y - startWorld.y;
+                            obj.x1 += dx; obj.y1 += dy;
+                            obj.x2 += dx; obj.y2 += dy;
+                        }
+                        // atualizar offsets de portas/janelas se necessário
+                    } else if (obj.type === 'door' || obj.type === 'window') {
+                        const wall = walls[obj.wallIndex];
+                        if (wall) {
+                            const angle = wall.angle;
+                            const dx = worldPoint.x - wall.x1;
+                            const dy = worldPoint.y - wall.y1;
+                            let proj = dx * Math.cos(angle) + dy * Math.sin(angle);
+                            proj = Math.max(0, Math.min(wall.length, proj));
+                            obj.offset = proj;
+                        }
+                    }
+                    render();
+                } else if (dragStartCamera) {
+                    // pan
+                    const dx = mouseX - dragStartMouse.x;
+                    const dy = mouseY - dragStartMouse.y;
+                    camera.offsetX = dragStartCamera.offsetX + dx;
+                    camera.offsetY = dragStartCamera.offsetY + dy;
+                    render();
+                }
+            }
+
+            function endDrag() {
+                if (isDragging && dragStartObjectState) {
+                    saveState();
+                }
+                isDragging = false;
+                dragStartObjectState = null;
+                dragStartCamera = null;
+                selectedFurnitureHandle = null;
+                selectedWallEndpoint = null;
+                selectedDoorWindow = null;
+                canvas.style.cursor = 'crosshair';
+                render();
+            }
+
+            function updateCursor(worldPoint) {
+                if (tool === 'select') {
+                    const obj = findObjectAt(worldPoint);
+                    if (obj) {
+                        canvas.style.cursor = 'pointer';
+                        if (obj instanceof Furniture) {
+                            const handle = obj.getHandleAt(worldPoint, 10);
+                            if (handle) {
+                                if (handle.type === 'move') canvas.style.cursor = 'move';
+                                else if (handle.type === 'resize') canvas.style.cursor = 'nwse-resize';
+                                else if (handle.type === 'rotate') canvas.style.cursor = 'crosshair';
+                            }
+                        } else if (obj.type === 'wall') {
+                            const tol = 10 / camera.scale;
+                            if (distance(worldPoint, {x:obj.x1,y:obj.y1}) < tol || 
+                                distance(worldPoint, {x:obj.x2,y:obj.y2}) < tol) {
+                                canvas.style.cursor = 'pointer';
+                            }
+                        }
+                    } else {
+                        canvas.style.cursor = 'crosshair';
+                    }
+                } else if (tool === 'wall' || tool === 'door' || tool === 'window' || tool === 'furniture' || tool === 'measure') {
+                    canvas.style.cursor = 'crosshair';
+                }
+            }
+
+            function deleteSelectedObject() {
+                if (!selectedObject) return;
+                const index = walls.indexOf(selectedObject);
+                if (index !== -1) {
+                    walls.splice(index, 1);
+                    // remover portas/janelas associadas
+                    doors = doors.filter(d => d.wallIndex !== index);
+                    windows = windows.filter(w => w.wallIndex !== index);
+                    // ajustar índices
+                    doors.forEach(d => { if (d.wallIndex > index) d.wallIndex--; });
+                    windows.forEach(w => { if (w.wallIndex > index) w.wallIndex--; });
+                } else {
+                    const doorIndex = doors.indexOf(selectedObject);
+                    if (doorIndex !== -1) doors.splice(doorIndex, 1);
+                    const winIndex = windows.indexOf(selectedObject);
+                    if (winIndex !== -1) windows.splice(winIndex, 1);
+                    const furnIndex = furnitures.indexOf(selectedObject);
+                    if (furnIndex !== -1) furnitures.splice(furnIndex, 1);
+                }
+                clearSelection();
+                saveState();
+                render();
+            }
+
+            // ==================== FERRAMENTAS DE UI ====================
+            function setTool(newTool) {
+                tool = newTool;
+                document.querySelectorAll('.tool-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.tool === tool) btn.classList.add('active');
+                });
+                clearSelection();
+                // resetar estados de desenho
+                drawingWall = false;
+                wallChain = [];
+                measuring = false;
+                placingFurniture = false;
+                furnitureSubmenu.classList.remove('show');
+                canvas.style.cursor = 'crosshair';
+                render();
+            }
+
+            function toggleFurnitureMenu() {
+                furnitureSubmenu.classList.toggle('show');
+            }
+
+            function buildFurnitureMenu() {
+                const types = [
+                    { type: 'sofa', label: '🛋️ Sofá' },
+                    { type: 'bed', label: '🛏️ Cama' },
+                    { type: 'table', label: '🍽️ Mesa' },
+                    { type: 'chair', label: '🪑 Cadeira' },
+                    { type: 'cabinet', label: '🗄️ Armário' },
+                    { type: 'fridge', label: '🧊 Geladeira' },
+                    { type: 'stove', label: '🍳 Fogão' },
+                    { type: 'sink', label: '🚰 Pia' },
+                    { type: 'toilet', label: '🚽 Vaso' },
+                    { type: 'shower', label: '🚿 Chuveiro' }
+                ];
+                furnitureSubmenu.innerHTML = '';
+                types.forEach(t => {
+                    const btn = document.createElement('button');
+                    btn.className = 'furniture-option';
+                    btn.textContent = t.label;
+                    btn.addEventListener('click', () => {
+                        currentFurnitureType = t.type;
+                        setTool('furniture');
+                        furnitureSubmenu.classList.remove('show');
+                        statusInfo.textContent = `Clique e arraste para inserir ${t.label}`;
+                    });
+                    furnitureSubmenu.appendChild(btn);
+                });
+            }
+
+            // ==================== SALVAR/CARREGAR ====================
+            function saveToLocalStorage() {
+                const project = {
+                    walls, doors, windows, furnitures, camera
+                };
+                localStorage.setItem('plannerCasaProjeto', JSON.stringify(project));
+                statusInfo.textContent = 'Projeto salvo no navegador.';
+            }
+            function loadFromLocalStorage() {
+                const data = localStorage.getItem('plannerCasaProjeto');
+                if (data) {
+                    const project = JSON.parse(data);
+                    walls = project.walls.map(w => Object.assign(new Wall(), w));
+                    doors = project.doors.map(d => Object.assign(new Door(), d));
+                    windows = project.windows.map(w => Object.assign(new Window(), w));
+                    furnitures = project.furnitures.map(f => Object.assign(new Furniture(), f));
+                    camera = project.camera;
+                    clearSelection();
+                    saveState();
+                    render();
+                    statusInfo.textContent = 'Projeto carregado.';
+                } else {
+                    statusInfo.textContent = 'Nenhum projeto salvo.';
+                }
+            }
+            function exportJSON() {
+                const project = { walls, doors, windows, furnitures, camera };
+                const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'planta_casa.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+            function importJSON(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const project = JSON.parse(e.target.result);
+                        walls = project.walls.map(w => Object.assign(new Wall(), w));
+                        doors = project.doors.map(d => Object.assign(new Door(), d));
+                        windows = project.windows.map(w => Object.assign(new Window(), w));
+                        furnitures = project.furnitures.map(f => Object.assign(new Furniture(), f));
+                        camera = project.camera;
+                        clearSelection();
+                        saveState();
+                        render();
+                        statusInfo.textContent = 'Projeto importado.';
+                    } catch (err) {
+                        statusInfo.textContent = 'Erro ao importar: arquivo inválido.';
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            // ==================== INICIALIZAÇÃO ====================
+            function init() {
+                buildFurnitureMenu();
+                // eventos dos botões
+                document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (btn.dataset.tool === 'furniture') {
+                            toggleFurnitureMenu();
+                        } else {
+                            setTool(btn.dataset.tool);
+                        }
+                    });
+                });
+                document.getElementById('btnUndo').addEventListener('click', undo);
+                document.getElementById('btnRedo').addEventListener('click', redo);
+                document.getElementById('btnSave').addEventListener('click', saveToLocalStorage);
+                document.getElementById('btnLoad').addEventListener('click', loadFromLocalStorage);
+                document.getElementById('btnExport').addEventListener('click', exportJSON);
+                document.getElementById('btnClear').addEventListener('click', () => {
+                    if (confirm('Deseja limpar todo o projeto?')) {
+                        walls = [];
+                        doors = [];
+                        windows = [];
+                        furnitures = [];
+                        clearSelection();
+                        saveState();
+                        render();
+                    }
+                });
+                document.getElementById('btnDeleteSelected').addEventListener('click', deleteSelectedObject);
+                document.getElementById('btnImport').addEventListener('click', () => {
+                    document.getElementById('fileInput').click();
+                });
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        importJSON(e.target.files[0]);
+                    }
+                });
+
+                // ajustar canvas ao redimensionar
+                window.addEventListener('resize', () => {
+                    canvas.width = canvas.clientWidth;
+                    canvas.height = canvas.clientHeight;
+                    render();
+                });
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+
+                // estado inicial vazio ou carregar localStorage automaticamente
+                if (localStorage.getItem('plannerCasaProjeto')) {
+                    loadFromLocalStorage();
+                } else {
+                    saveState();
+                    render();
+                }
+                statusInfo.textContent = 'Bem-vindo! Use as ferramentas para desenhar.';
+            }
+
+            init();
+        })();
+    </script>
 </body>
 </html>
